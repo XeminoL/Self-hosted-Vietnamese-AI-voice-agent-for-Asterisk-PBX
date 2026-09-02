@@ -70,6 +70,6 @@ Bảng "chữ này thành số kia" đã bị bỏ vì mỗi lỗi mới lại p
 
 ## Đo hiệu năng
 
-`try_without_calling.py` in ra thời gian nạp/sinh token và cache của llama-server. Đó là chỗ xem khi thấy chậm — nếu `cache 0` mỗi lượt thì lời dẫn vừa bị đổi.
+`try_without_calling.py` in ra thời gian nạp/sinh token và cache của llama-server. Đó là chỗ xem khi thấy chậm: nếu `cache 0` mỗi lượt thì lời dẫn vừa bị đổi.
 
 ⚠️ Tắt `switchboard.py` khi đo, hai bên tranh CPU làm số cao gấp rưỡi.

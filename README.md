@@ -31,7 +31,7 @@ sudo apt-get update
 sudo apt-get install -y docker.io docker-compose-v2 python3-pip python3-venv sox
 sudo usermod -aG docker $USER
 ```
-Rồi **thoát WSL và vào lại** — nếu không sẽ báo `permission denied`.
+Rồi **thoát WSL và vào lại**: nếu không sẽ báo `permission denied`.
 
 ⚠️ **Mạng không thông IPv6 thì Docker không tải được image:**
 ```bash
@@ -92,7 +92,7 @@ Cài **Zoiper 5** (hoặc Linphone) trên Windows, khai:
 | Mật khẩu | `matkhau1001` |
 | Máy chủ | địa chỉ IP của WSL (`ip addr show eth0`) |
 
-⚠️ Zoiper phải bật **gửi DTMF** — tổng đài nhận số điện thoại qua bàn phím.
+⚠️ Zoiper phải bật **gửi DTMF**: tổng đài nhận số điện thoại qua bàn phím.
 
 🔒 **Mật khẩu SIP trong `asterisk/config/pjsip.conf` là mật khẩu mẫu.** Đổi trước khi cho máy nghe được từ mạng ngoài. Tổng đài SIP mở ra Internet với mật khẩu đoán được là bị quét rồi gọi quốc tế mất tiền.
 
@@ -102,13 +102,13 @@ Cài **Zoiper 5** (hoặc Linphone) trên Windows, khai:
 
 Cần **ba cửa sổ terminal**.
 
-**Cửa sổ 1 — mô hình hiểu:**
+**Cửa sổ 1: mô hình hiểu:**
 ```bash
 cd ~/llamacpp/openvino/llama-b*
 GGML_OPENVINO_DEVICE=GPU ./llama-server -hf unsloth/Qwen3-4B-Instruct-2507-GGUF:Q4_K_M -c 2048 -t 4 --host 127.0.0.1 --port 8080
 ```
 
-**Cửa sổ 2 — tổng đài:**
+**Cửa sổ 2: tổng đài:**
 ```bash
 sudo service docker start
 sudo ip -6 addr flush dev eth0
@@ -118,7 +118,7 @@ docker exec tongdai asterisk -rx "pjsip show endpoints"
 ```
 Số 1001 phải ở trạng thái `Not in use`.
 
-**Cửa sổ 3 — bộ điều khiển:**
+**Cửa sổ 3: bộ điều khiển:**
 ```bash
 cd "<thư mục dự án>/app"
 source ../.venv/bin/activate
@@ -131,21 +131,21 @@ Chờ `AudioSocket dang cho o 127.0.0.1:9092`, rồi từ Zoiper **gọi số 60
 
 ## Kiểm thử
 
-**Test tự động** — không cần model, không cần container, không cần gọi điện:
+**Test tự động**: không cần model, không cần container, không cần gọi điện:
 ```bash
 source .venv/bin/activate
 pytest
 ```
 49 test, chạy dưới 1 giây.
 
-**Thử hội thoại không cần nói** — chỉ cần cửa sổ 1:
+**Thử hội thoại không cần nói**: chỉ cần cửa sổ 1:
 ```bash
 cd tests
 python3 try_without_calling.py
 python3 try_without_calling.py "tôi muốn khoá thẻ" "đúng rồi"
 ```
 In cả thời gian nạp/sinh token và cache của llama-server, dùng để tìm chỗ chậm.
-⚠️ Tắt `switchboard.py` khi đo — hai bên tranh CPU làm số cao gấp rưỡi.
+⚠️ Tắt `switchboard.py` khi đo: hai bên tranh CPU làm số cao gấp rưỡi.
 
 **Thử đường tiếng AudioSocket:**
 ```bash
@@ -233,7 +233,7 @@ Dialplan chỉ **một dòng** cho toàn bộ tổng đài AI. Mọi logic nằm
 
 ## Số liệu đổi được lúc đang chạy
 
-`app/docs/figures.json` chứa lãi suất, tỷ giá, giá vàng. Sửa file là tổng đài đọc số mới **ngay lượt sau** — không khởi động lại, không sửa code.
+`app/docs/figures.json` chứa lãi suất, tỷ giá, giá vàng. Sửa file là tổng đài đọc số mới **ngay lượt sau**: không khởi động lại, không sửa code.
 
 Đây là chỗ hệ thống ngân hàng ghi số vào. Số viết **thành chữ** (*"bốn phẩy sáu"*) vì máy đọc ký hiệu phần trăm không ra.
 
@@ -250,7 +250,7 @@ Dialplan chỉ **một dòng** cho toàn bộ tổng đài AI. Mọi logic nằm
 | Nói (Piper) | 1,2 – 1,7s · **0s** nếu câu đã có trong thư viện |
 | **Một lượt** | **4 – 9 giây** |
 
-⚠️ **Không đạt chuẩn ngành (200–400ms).** Đó là giá của việc chạy mô hình trên CPU không GPU — repo tương tự (`hkjarral/Asterisk-AI-Voice-Agent`) cũng ghi 5–15 giây mỗi lượt.
+⚠️ **Không đạt chuẩn ngành (200–400ms).** Đó là giá của việc chạy mô hình trên CPU không GPU: repo tương tự (`hkjarral/Asterisk-AI-Voice-Agent`) cũng ghi 5–15 giây mỗi lượt.
 
 **Nhiều cuộc gọi song song:** kiến trúc chịu được (mỗi cuộc một luồng, ba mô hình dùng chung an toàn), nhưng **llama-server xử lý tuần tự** nên 3 cuộc mất 26 giây thay vì 9. Thực tế phục vụ **1 cuộc tại một thời điểm** với độ trễ chấp nhận được.
 
