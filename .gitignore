@@ -1,9 +1,9 @@
 __pycache__/
 *.pyc
-moi-truong/
-dieu-khien/cuoc-goi/
-dieu-khien/thu-vien-giong/
+.venv/
+app/calls/
+app/voice-library/
 *.wav
 *.sln
 .pytest_cache/
-kiem-thu/ket-qua-*.txt
+tests/ket-qua-*.txt

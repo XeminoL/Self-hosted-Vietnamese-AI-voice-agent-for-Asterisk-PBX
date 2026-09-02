@@ -44,9 +44,9 @@ Phải gõ lại sau mỗi lần khởi động máy.
 
 ```bash
 cd "<thư mục dự án>"
-python3 -m venv moi-truong
-source moi-truong/bin/activate
-pip install -r yeu-cau.txt
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
 ### 3. Mô hình nghe (gipformer, 73MB)
@@ -94,6 +94,8 @@ Cài **Zoiper 5** (hoặc Linphone) trên Windows, khai:
 
 ⚠️ Zoiper phải bật **gửi DTMF** — tổng đài nhận số điện thoại qua bàn phím.
 
+🔒 **Mật khẩu SIP trong `asterisk/config/pjsip.conf` là mật khẩu mẫu.** Đổi trước khi cho máy nghe được từ mạng ngoài. Tổng đài SIP mở ra Internet với mật khẩu đoán được là bị quét rồi gọi quốc tế mất tiền.
+
 ---
 
 ## Chạy hằng ngày
@@ -118,9 +120,9 @@ Số 1001 phải ở trạng thái `Not in use`.
 
 **Cửa sổ 3 — bộ điều khiển:**
 ```bash
-cd "<thư mục dự án>/dieu-khien"
-source ../moi-truong/bin/activate
-python3 tong_dai.py 2>/dev/null
+cd "<thư mục dự án>/app"
+source ../.venv/bin/activate
+python3 switchboard.py 2>/dev/null
 ```
 
 Chờ `AudioSocket dang cho o 127.0.0.1:9092`, rồi từ Zoiper **gọi số 600**.
@@ -131,31 +133,31 @@ Chờ `AudioSocket dang cho o 127.0.0.1:9092`, rồi từ Zoiper **gọi số 60
 
 **Test tự động** — không cần model, không cần container, không cần gọi điện:
 ```bash
-source moi-truong/bin/activate
+source .venv/bin/activate
 pytest
 ```
 49 test, chạy dưới 1 giây.
 
 **Thử hội thoại không cần nói** — chỉ cần cửa sổ 1:
 ```bash
-cd kiem-thu
-python3 thu_khong_can_goi.py
-python3 thu_khong_can_goi.py "tôi muốn khoá thẻ" "đúng rồi"
+cd tests
+python3 try_without_calling.py
+python3 try_without_calling.py "tôi muốn khoá thẻ" "đúng rồi"
 ```
 In cả thời gian nạp/sinh token và cache của llama-server, dùng để tìm chỗ chậm.
-⚠️ Tắt `tong_dai.py` khi đo — hai bên tranh CPU làm số cao gấp rưỡi.
+⚠️ Tắt `switchboard.py` khi đo — hai bên tranh CPU làm số cao gấp rưỡi.
 
 **Thử đường tiếng AudioSocket:**
 ```bash
-cd kiem-thu
-python3 thu_audiosocket.py
+cd tests
+python3 try_audiosocket.py
 ```
 Rồi gọi 600, nó vọng lại tiếng bạn.
 
 **So mô hình nghe:**
 ```bash
-cd kiem-thu
-python3 so_sanh_model_nghe.py <file.sln> ...
+cd tests
+python3 compare_speech_models.py <file.sln> ...
 ```
 
 ---
@@ -194,7 +196,7 @@ Ba số điện thoại trong dữ liệu mẫu: `0901234567` · `0987654321` ·
 ## Cấu tạo
 
 ```
-Zoiper --SIP--> Asterisk (Docker) --AudioSocket TCP--> tong_dai.py
+Zoiper --SIP--> Asterisk (Docker) --AudioSocket TCP--> switchboard.py
                                                         |-- gipformer   nghe
                                                         |-- Qwen3-4B    hiểu
                                                         |-- Piper       nói
@@ -202,18 +204,20 @@ Zoiper --SIP--> Asterisk (Docker) --AudioSocket TCP--> tong_dai.py
 
 Dialplan chỉ **một dòng** cho toàn bộ tổng đài AI. Mọi logic nằm trong Python.
 
+Định danh trong code viết tiếng Anh; tiếng Việt để dành cho câu tổng đài nói, lời dẫn LLM và tài liệu. Chi tiết ở `CONTRIBUTING.md`.
+
 | File | Việc |
 |---|---|
-| `dieu-khien/tong_dai.py` | mạng, đọc/ghi khung tiếng, vòng cuộc gọi |
-| `dieu-khien/hoi_thoai.py` | một lượt hội thoại: gọi LLM, chọn việc, lọc câu trả lời |
-| `dieu-khien/mo_hinh.py` | bọc ba mô hình (nghe · nói nhanh · nói đẹp) |
-| `dieu-khien/audiosocket.py` | giao thức AudioSocket |
-| `dieu-khien/du_lieu_ngan_hang.py` | dữ liệu khách hàng + 4 việc tra được |
-| `dieu-khien/tai_lieu_ngan_hang.py` | tra tài liệu, đọc lại file khi nó đổi |
-| `dieu-khien/thu_vien_giong.py` | nhớ câu đã sinh để lần sau phát ngay |
-| `dieu-khien/sua_chu_nghe.py` | sửa từ gần âm ("số dừa" thành "số dư") |
-| `dieu-khien/loi_dan.txt` | lời dẫn cho LLM — sửa được không cần sửa code |
-| `dieu-khien/tai-lieu/*.json` | tài liệu và số liệu — **đổi lúc đang chạy** |
+| `app/switchboard.py` | mạng, đọc/ghi khung tiếng, vòng cuộc gọi |
+| `app/conversation.py` | một lượt hội thoại: gọi LLM, chọn việc, lọc câu trả lời |
+| `app/models.py` | bọc ba mô hình (nghe · nói nhanh · nói đẹp) |
+| `app/audiosocket.py` | giao thức AudioSocket |
+| `app/bank_data.py` | dữ liệu khách hàng + 4 việc tra được |
+| `app/bank_docs.py` | tra tài liệu, đọc lại file khi nó đổi |
+| `app/voice_library.py` | nhớ câu đã sinh để lần sau phát ngay |
+| `app/transcript_fixup.py` | sửa từ gần âm ("số dừa" thành "số dư") |
+| `app/prompt.txt` | lời dẫn cho LLM — sửa được không cần sửa code |
+| `app/docs/*.json` | tài liệu và số liệu — **đổi lúc đang chạy** |
 
 | Khối | Dùng gì | Giấy phép |
 |---|---|---|
@@ -229,7 +233,7 @@ Dialplan chỉ **một dòng** cho toàn bộ tổng đài AI. Mọi logic nằm
 
 ## Số liệu đổi được lúc đang chạy
 
-`dieu-khien/tai-lieu/so_lieu.json` chứa lãi suất, tỷ giá, giá vàng. Sửa file là tổng đài đọc số mới **ngay lượt sau** — không khởi động lại, không sửa code.
+`app/docs/figures.json` chứa lãi suất, tỷ giá, giá vàng. Sửa file là tổng đài đọc số mới **ngay lượt sau** — không khởi động lại, không sửa code.
 
 Đây là chỗ hệ thống ngân hàng ghi số vào. Số viết **thành chữ** (*"bốn phẩy sáu"*) vì máy đọc ký hiệu phần trăm không ra.
 
@@ -274,8 +278,6 @@ Bốn chỗ mô hình hay sai, đều chặn bằng dữ kiện thay vì bằng 
 | **Hỏi gì cũng trả lời được** | mô hình 4B không có kiến thức đó. Trả lời được 17 chủ đề ngân hàng, ngoài ra thì nói không biết và chuyển nhân viên |
 | Nhận dạng người gọi | chưa có |
 
-Bằng chứng và số đo cho từng mục: `00_TRANG_THAI.md`.
-
 ---
 
 ## Hỏng thì xem đâu
@@ -290,5 +292,3 @@ Bằng chứng và số đo cho từng mục: `00_TRANG_THAI.md`.
 | Bấm số mà log không in gì | Zoiper chưa bật gửi DTMF |
 | `Invalid input shape` | đoạn ghi quá ngắn — gipformer cần tối thiểu ~1 giây |
 | Log đầy `Creating a resampler` | sherpa-onnx tự đổi 8kHz sang 16kHz, bình thường. Chạy với `2>/dev/null` |
-
-Mọi bẫy đã gặp và cách xử lý ghi đầy đủ trong **`00_TRANG_THAI.md`**.
