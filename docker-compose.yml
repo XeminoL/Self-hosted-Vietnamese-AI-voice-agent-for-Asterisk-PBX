@@ -1,0 +1,8 @@
+services:
+  asterisk:
+    image: andrius/asterisk:23.4.1_debian-forky
+    container_name: tongdai
+    network_mode: host
+    restart: "no"
+    volumes:
+      - ./asterisk/config:/etc/asterisk

@@ -1,0 +1,5 @@
+sherpa-onnx
+vieneu
+webrtcvad-wheels
+numpy
+pytest

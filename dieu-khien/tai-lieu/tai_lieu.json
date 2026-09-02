@@ -1,0 +1,19 @@
+{
+  "lai_suat_tiet_kiem": "Dạ lãi suất tiết kiệm sáu tháng là {lai_suat_6thang} phần trăm một năm, mười hai tháng là {lai_suat_12thang} phần trăm ạ.",
+  "lai_suat_vay": "Dạ lãi suất vay tiêu dùng từ {lai_suat_vay_tieu_dung} phần trăm một năm, vay mua nhà từ {lai_suat_vay_nha} phần trăm ạ.",
+  "ty_gia_do": "Dạ tỷ giá đô la hôm nay mua {ty_gia_do_mua}, bán {ty_gia_do_ban} đồng ạ.",
+  "gia_vang": "Dạ giá vàng hôm nay mua {gia_vang_mua}, bán {gia_vang_ban} triệu một lượng ạ.",
+  "phi_chuyen_tien": "Dạ chuyển trong ngân hàng miễn phí, chuyển ngoài ngân hàng bảy nghìn đồng một lần ạ.",
+  "cach_chuyen_tien": "Dạ anh chị chuyển được trên ứng dụng, tại quầy, hoặc gọi tổng đài ạ. Trên ứng dụng là nhanh nhất.",
+  "gio_lam_viec": "Dạ chi nhánh mở từ tám giờ đến mười sáu giờ ba mươi, thứ hai đến thứ sáu ạ. Tổng đài thì hai mươi bốn trên bảy.",
+  "han_muc_mac_dinh": "Dạ hạn mức chuyển tiền mặc định là hai mươi triệu một ngày, anh chị đổi được trên ứng dụng ạ.",
+  "the_bi_mat": "Dạ anh chị khoá thẻ ngay qua tổng đài hoặc ứng dụng, rồi ra chi nhánh làm thẻ mới ạ.",
+  "quen_mat_khau": "Dạ anh chị chọn quên mật khẩu trên ứng dụng, hệ thống gửi mã về số điện thoại đăng ký ạ.",
+  "mo_tai_khoan": "Dạ anh chị mở tài khoản trên ứng dụng bằng căn cước, hoặc ra chi nhánh, mất khoảng mười lăm phút ạ.",
+  "phi_thuong_nien": "Dạ thẻ ghi nợ miễn phí thường niên năm đầu, từ năm sau là một trăm nghìn đồng ạ.",
+  "rut_tien_atm": "Dạ rút tại máy của ngân hàng thì miễn phí, máy ngân hàng khác là ba nghìn đồng một lần ạ.",
+  "thoi_gian_chuyen_tien": "Dạ chuyển trong ngân hàng là tức thì, chuyển ngoài thì trong vài phút, ngoài giờ làm việc có thể lâu hơn ạ.",
+  "vay_can_gi": "Dạ vay cần căn cước, giấy tờ thu nhập, và sao kê ba tháng gần nhất ạ.",
+  "so_du_toi_thieu": "Dạ tài khoản thanh toán cần giữ tối thiểu năm mươi nghìn đồng ạ.",
+  "chi_nhanh_o_dau": "Dạ ngân hàng có chi nhánh ở các thành phố lớn, anh chị xem địa chỉ gần nhất trên ứng dụng ạ."
+}
