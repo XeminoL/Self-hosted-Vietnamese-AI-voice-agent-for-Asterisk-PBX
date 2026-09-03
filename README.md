@@ -1,5 +1,7 @@
 A phone switchboard that answers in Vietnamese with no cloud service behind it.
 
+(​I used a bank assistant as an example, but you can customize it for any use case)
+
 ```
 Zoiper --SIP--> Asterisk (Docker) --AudioSocket TCP--> switchboard.py
                                                         |-- gipformer   
