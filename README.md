@@ -12,9 +12,9 @@ Zoiper --SIP--> Asterisk (Docker) --AudioSocket TCP--> switchboard.py
 | | | License |
 |---|---|---|
 | Switchboard | Asterisk 23.4.1 | GPLv2 |
-| Hear | `gipformer1.5-65M-rnnt` | MIT |
-| Understand | `Qwen3-4B-Instruct-2507-Q4_K_M` | Apache 2.0 |
-| Speak | Piper `vi_VN-vais1000-medium` | MIT |
+| Hear | `gipformer 65M` | MIT |
+| Understand | `Qwen3-4B` | Apache 2.0 |
+| Speak | Piper | MIT |
 | Speak, repeated sentences | VieNeu-TTS v3-Turbo | Apache 2.0 |
 
 ## Running
