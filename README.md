@@ -35,15 +35,3 @@ Register a softphone as `1001` and use Zoiper 5 to dial:
 **600**: the switchboard.
 **200**: echoes the caller back.
 **900**: dials a person.
-
-## Editing
-
-| To change | Edit |
-|---|---|
-| How it talks | `app/prompt.txt` |
-| Information about general banks| `app/docs/figures.json` |
-| Answers to general questions | `app/docs/topics.json` |
-| Customers and the four lookups | `app/bank_data.py` |
-| Listening thresholds and timeouts | `app/switchboard.py` |
-| Reply length, remembered turns | `app/conversation.py` |
-| A different recogniser or synthesiser | `app/models.py` |
