@@ -36,8 +36,6 @@ Register a softphone as `1001` and use Zoiper 5 to dial:
 **200**: echoes the caller back.
 **900**: dials a person.
 
-Turn DTMF sending on, that is how the phone number arrives.
-
 ## Editing
 
 | To change | Edit |
