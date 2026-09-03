@@ -36,7 +36,10 @@ def ask_llm(history):
     )
     with urllib.request.urlopen(request) as response:
         result = json.loads(response.read())
-    return result["choices"][0]["message"]["content"].strip(), result.get("timings", {})
+    choice = result["choices"][0]
+    return (choice["message"]["content"].strip(),
+            choice.get("finish_reason") == "length",
+            result.get("timings", {}))
 
 
 def describe_timings(timings):
@@ -103,13 +106,14 @@ class Conversation:
         caller_sentence = self._build_caller_sentence(transcript, dialed_number)
         self.history.append({"role": "user", "content": caller_sentence})
 
-        llm_sentence, timings = ask_llm(self.history)
+        llm_sentence, ran_out_of_tokens, timings = ask_llm(self.history)
         log = [f"HIEU: {llm_sentence}"]
         timing_line = describe_timings(timings)
         if timing_line:
             log.insert(0, timing_line)
 
-        result = self._decide(caller_sentence, llm_sentence, dialed_number, log)
+        result = self._decide(caller_sentence, llm_sentence, dialed_number,
+                              ran_out_of_tokens, log)
         self.history.append({"role": "assistant", "content": result.reply})
         return result
 
@@ -120,7 +124,8 @@ class Conversation:
             sentence += f" (số điện thoại đã bấm: {dialed_number})"
         return sentence
 
-    def _decide(self, caller_sentence, llm_sentence, dialed_number, log):
+    def _decide(self, caller_sentence, llm_sentence, dialed_number,
+                ran_out_of_tokens, log):
         if TAG_TRANSFER in llm_sentence:
             return TurnResult(log=log, transfer=True)
 
@@ -135,7 +140,9 @@ class Conversation:
             log.append(f"TRA {action_name}({phone_number})")
             return TurnResult(ACTIONS[action_name](phone_number), log)
 
-        return TurnResult(self._filter_llm_sentence(caller_sentence, llm_sentence, log), log)
+        return TurnResult(
+            self._filter_llm_sentence(caller_sentence, llm_sentence,
+                                      ran_out_of_tokens, log), log)
 
     def _settle_command(self, caller_sentence, llm_sentence, dialed_number, log):
         command = parse_action_command(llm_sentence)
@@ -168,13 +175,16 @@ class Conversation:
 
         return command
 
-    def _filter_llm_sentence(self, caller_sentence, llm_sentence, log):
+    def _filter_llm_sentence(self, caller_sentence, llm_sentence,
+                             ran_out_of_tokens, log):
         sentence = strip_tags(llm_sentence)
 
         if self.action_awaiting_confirmation:
             return CONFIRMATION_QUESTIONS[self.action_awaiting_confirmation[0]]
         if not sentence:
             return ASK_FOR_PHONE_NUMBER if TAG_ACTION in llm_sentence else DID_NOT_CATCH
+        if ran_out_of_tokens:
+            return self._rescue_unfinished(caller_sentence, sentence, log)
         if not contains_digit(sentence):
             return sentence
 
@@ -183,4 +193,13 @@ class Conversation:
             log.append(f"BIA SO LIEU -> tu khoa: {topic}")
             return read_topic(topic)
         log.append(f"BIA SO LIEU, bo: {sentence}")
+        return OUT_OF_SCOPE
+
+    @staticmethod
+    def _rescue_unfinished(caller_sentence, sentence, log):
+        topic = find_topic_by_keyword(caller_sentence)
+        if topic:
+            log.append(f"CAU BI CAT -> tu khoa: {topic}")
+            return read_topic(topic)
+        log.append(f"CAU BI CAT, bo: {sentence}")
         return OUT_OF_SCOPE

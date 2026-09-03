@@ -96,17 +96,46 @@ def test_refusal_drops_the_pending_action():
 
 def test_invented_figure_falls_back_to_document():
     session = conv.Conversation()
-    sentence = session._filter_llm_sentence("giá vàng thế nào", "Dạ giá vàng 58 triệu ạ.", [])
+    sentence = session._filter_llm_sentence("giá vàng thế nào", "Dạ giá vàng 58 triệu ạ.",
+                                            False, [])
     assert "58" not in sentence
 
 
 def test_invented_figure_out_of_scope_says_it_does_not_know():
     session = conv.Conversation()
-    sentence = session._filter_llm_sentence("thời tiết hôm nay", "Dạ hôm nay 30 độ C ạ.", [])
+    sentence = session._filter_llm_sentence("thời tiết hôm nay", "Dạ hôm nay 30 độ C ạ.",
+                                            False, [])
     assert sentence == conv.OUT_OF_SCOPE
 
 
 def test_clean_sentence_passes_through():
     session = conv.Conversation()
     sentence = "Dạ em là Duyên ạ."
-    assert session._filter_llm_sentence("em tên gì", sentence, []) == sentence
+    assert session._filter_llm_sentence("em tên gì", sentence, False, []) == sentence
+
+
+def test_unfinished_sentence_is_never_spoken():
+    session = conv.Conversation()
+    cut_off = "Lãi suất tiết kiệm là phần tiền lãi được tính trên số tiền gửi, được trả lại cho"
+    spoken = session._filter_llm_sentence("lãi suất tiết kiệm là gì", cut_off, True, [])
+    assert spoken != cut_off
+
+
+def test_unfinished_sentence_falls_back_to_document():
+    session = conv.Conversation()
+    spoken = session._filter_llm_sentence("lãi suất tiết kiệm là gì",
+                                          "Lãi suất tiết kiệm là phần tiền lãi được", True, [])
+    assert "bốn phẩy sáu" in spoken
+
+
+def test_unfinished_sentence_out_of_scope_says_it_does_not_know():
+    session = conv.Conversation()
+    spoken = session._filter_llm_sentence("kể chuyện gì đi",
+                                          "Ngày xưa có một người rất là", True, [])
+    assert spoken == conv.OUT_OF_SCOPE
+
+
+def test_finished_sentence_without_digits_still_passes():
+    session = conv.Conversation()
+    sentence = "Dạ em nghe ạ."
+    assert session._filter_llm_sentence("alo", sentence, False, []) == sentence

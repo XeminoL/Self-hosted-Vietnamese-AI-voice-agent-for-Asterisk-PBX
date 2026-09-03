@@ -250,6 +250,10 @@ Dialplan chỉ **một dòng** cho toàn bộ tổng đài AI. Mọi logic nằm
 | Nói (Piper) | 1,2 – 1,7s · **0s** nếu câu đã có trong thư viện |
 | **Một lượt** | **4 – 9 giây** |
 
+⚠️ **Lượt đầu tiên sau khi bật llama-server mất ~25 giây**, không phải 4-9. Cache tiền tố chưa có gì
+nên nó phải nạp trọn lời dẫn 950 token. Lượt thứ hai trở đi mới nhanh. Xem `cache` trong log: bằng 0
+là đang nạp lại từ đầu.
+
 ⚠️ **Không đạt chuẩn ngành (200–400ms).** Đó là giá của việc chạy mô hình trên CPU không GPU: repo tương tự (`hkjarral/Asterisk-AI-Voice-Agent`) cũng ghi 5–15 giây mỗi lượt.
 
 **Nhiều cuộc gọi song song:** kiến trúc chịu được (mỗi cuộc một luồng, ba mô hình dùng chung an toàn), nhưng **llama-server xử lý tuần tự** nên 3 cuộc mất 26 giây thay vì 9. Thực tế phục vụ **1 cuộc tại một thời điểm** với độ trễ chấp nhận được.
