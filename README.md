@@ -2,9 +2,9 @@ A phone switchboard that answers in Vietnamese with no cloud service behind it.
 
 ```
 Zoiper --SIP--> Asterisk (Docker) --AudioSocket TCP--> switchboard.py
-                                                        |-- gipformer   hear
-                                                        |-- Qwen3-4B    understand
-                                                        |-- Piper       speak
+                                                        |-- gipformer   
+                                                        |-- Qwen3-4B    
+                                                        |-- Piper       
 ```
 
 ## Models
