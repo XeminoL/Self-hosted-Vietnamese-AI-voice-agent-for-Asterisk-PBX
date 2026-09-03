@@ -6,7 +6,7 @@
 source .venv/bin/activate
 pytest
 ```
-49 test phải đậu hết. Đỏ ngay từ đầu thì đừng sửa gì, tìm nguyên nhân trước.
+53 test phải đậu hết. Đỏ ngay từ đầu thì đừng sửa gì, tìm nguyên nhân trước.
 
 ## Sau khi sửa
 

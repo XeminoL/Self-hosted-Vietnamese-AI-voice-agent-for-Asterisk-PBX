@@ -136,7 +136,7 @@ Chờ `AudioSocket dang cho o 127.0.0.1:9092`, rồi từ Zoiper **gọi số 60
 source .venv/bin/activate
 pytest
 ```
-49 test, chạy dưới 1 giây.
+53 test, chạy dưới 1 giây.
 
 **Thử hội thoại không cần nói**: chỉ cần cửa sổ 1:
 ```bash
@@ -262,7 +262,7 @@ là đang nạp lại từ đầu.
 
 ## Không tin mô hình — chặn bằng code
 
-Bốn chỗ mô hình hay sai, đều chặn bằng dữ kiện thay vì bằng lời dẫn:
+Năm chỗ mô hình hay sai, đều chặn bằng dữ kiện thay vì bằng lời dẫn:
 
 | Mô hình làm sai | Chặn thế nào |
 |---|---|
@@ -270,6 +270,7 @@ Bốn chỗ mô hình hay sai, đều chặn bằng dữ kiện thay vì bằng 
 | Bịa lãi suất, tỷ giá, giá vàng | câu mô hình **tự soạn** mà có chữ số thì bỏ, tìm chủ đề theo từ khoá, không có thì nói không nắm được |
 | Gọi `khoa_the` khi không ai yêu cầu | việc **thay đổi dữ liệu** phải qua một lượt xác nhận, người gọi nói "đúng rồi" mới chạy |
 | Viết sai khuôn lệnh, lệnh lọt ra loa | câu trả lời còn chứa `@` thì không phát |
+| Viết chưa hết câu (hết `max_tokens` giữa dòng) | model tự báo qua `finish_reason`; câu cụt thì bỏ, tra tài liệu theo từ khoá hoặc chuyển nhân viên |
 
 ---
 
