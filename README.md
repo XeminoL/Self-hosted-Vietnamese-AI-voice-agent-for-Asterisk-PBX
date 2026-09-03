@@ -12,8 +12,8 @@ Zoiper --SIP--> Asterisk (Docker) --AudioSocket TCP--> switchboard.py
 | | | License |
 |---|---|---|
 | Switchboard | Asterisk 23.4.1 | GPLv2 |
-| Hear | `g-group-ai-lab/gipformer1.5-65M-rnnt` | MIT |
-| Understand | `unsloth/Qwen3-4B-Instruct-2507-GGUF:Q4_K_M` | Apache 2.0 |
+| Hear | `gipformer1.5-65M-rnnt` | MIT |
+| Understand | `Qwen3-4B-Instruct-2507-Q4_K_M` | Apache 2.0 |
 | Speak | Piper `vi_VN-vais1000-medium` | MIT |
 | Speak, repeated sentences | VieNeu-TTS v3-Turbo | Apache 2.0 |
 
@@ -41,7 +41,7 @@ Register a softphone as `1001` and use Zoiper 5 to dial:
 | To change | Edit |
 |---|---|
 | How it talks | `app/prompt.txt` |
-| Rates, exchange rate, gold price | `app/docs/figures.json` |
+| Information about general banks| `app/docs/figures.json` |
 | Answers to general questions | `app/docs/topics.json` |
 | Customers and the four lookups | `app/bank_data.py` |
 | Listening thresholds and timeouts | `app/switchboard.py` |
