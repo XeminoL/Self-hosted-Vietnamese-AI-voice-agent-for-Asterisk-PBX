@@ -1,4 +1,4 @@
-A phone switchboard that answers in Vietnamese with no cloud service behind it.
+⁸A phone switchboard that answers in Vietnamese with no cloud service behind it.
 
 (​I use a bank assistant as an example, but you can customize it for any use case)
 
@@ -13,7 +13,7 @@ Zoiper --SIP--> Asterisk (Docker) --AudioSocket TCP--> switchboard.py
 
 ![Zoiper in a call to 600](docs/call.png)
 
-**[Call demo](https://github.com/user-attachments/assets/eff0362e-6530-438b-a0b8-af9bb8bede9f)**
+https://github.com/user-attachments/assets/eff0362e-6530-438b-a0b8-af9bb8bede9f
 
 ## Models
 
