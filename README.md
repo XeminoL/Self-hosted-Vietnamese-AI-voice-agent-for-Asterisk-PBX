@@ -13,7 +13,7 @@ Zoiper --SIP--> Asterisk (Docker) --AudioSocket TCP--> switchboard.py
 
 ![Zoiper in a call to 600](docs/call.png)
 
-**[Demo video] https://github.com/user-attachments/assets/eff0362e-6530-438b-a0b8-af9bb8bede9f**
+**[Call demo](https://github.com/user-attachments/assets/eff0362e-6530-438b-a0b8-af9bb8bede9f)**
 
 ## Models
 
