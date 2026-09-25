@@ -11,7 +11,7 @@ Zoiper --SIP--> Asterisk (Docker) --AudioSocket TCP--> switchboard.py
 
 ## Demo
 
-A call to 600 with three questions. The caller's voice is synthesised with Piper and played into the call by Asterisk; everything after that is the switchboard running live.
+A call to 600 with three questions. The caller's voice is synthesised with Piper and played into the call by Asterisk;
 
 ![Zoiper in a call to 600](docs/call.png)
 
