@@ -1,4 +1,4 @@
-A phone switchboard that answers in Vietnamese with no cloud service behind it.
+A phone switchboard that answers in Vietnamese but no need for GPU and cloud service to use, only CPU and RAM.
 
 (​I use a bank assistant as an example, but you can customize it for any use case)
 
