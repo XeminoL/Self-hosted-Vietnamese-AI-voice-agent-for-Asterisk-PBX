@@ -30,7 +30,6 @@ bash run.sh
 ```
 
 - Call with Zoiper 5: register it as 1001 (password in `asterisk/config/pjsip.conf`) and dial 600.
-- `pytest` runs the tests; the ones that need the model skip when it is not running.
 
 ## License
 
