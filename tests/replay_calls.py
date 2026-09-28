@@ -25,6 +25,7 @@ QUIET_AFTER_REPLY = 1.2
 REPLY_LIMIT_SECONDS = 40.0
 QUEUE_LIMIT_SECONDS = 120.0
 START_GAP_SECONDS = 1.0
+LINE_FREE_SECONDS = 3.0
 KEY_GAP_FRAMES = 5
 RESULTS_FILE = Path(__file__).resolve().parent / "ket-qua-replay.json"
 
@@ -71,6 +72,7 @@ SCENARIOS = {
     ],
 }
 GREETING_EXPECTED = {"xep_hang": ["đang bận"]}
+BUSY_LINE_MAKER = {"xep_hang": "hoi_tai_lieu"}
 SHORTER_THAN_SECONDS = 3.0
 PRESS_HASH_AFTER_SECONDS = 1.0
 
@@ -239,14 +241,17 @@ def main():
                 spoken[sentence] = synthesizer.speak(sentence)
             return spoken[sentence]
 
-    for scenario in args.scenarios:
+    for scenario in set(args.scenarios) | {BUSY_LINE_MAKER.get(s, s) for s in args.scenarios}:
         for kind, content, _ in SCENARIOS[scenario]:
             if kind == "say":
                 caller_voice(content)
 
-    groups = [args.scenarios] if args.together else [[scenario] for scenario in args.scenarios]
+    groups = [args.scenarios] if args.together else [
+        [BUSY_LINE_MAKER[scenario], scenario] if scenario in BUSY_LINE_MAKER else [scenario]
+        for scenario in args.scenarios]
     results = []
     for group in groups:
+        time.sleep(LINE_FREE_SECONDS)
         batch = [None] * len(group)
 
         def run(slot, group=group, batch=batch):

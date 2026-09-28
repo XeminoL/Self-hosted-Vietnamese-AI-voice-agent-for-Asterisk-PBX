@@ -15,7 +15,6 @@ LLM_READY_TIMEOUT=180
 LLM_CACHE_REUSE=8
 LLM_SLOTS=1
 PIPER_VOICE="piper/cake/vi_VN-csa-voice-piper-v3-medium.onnx"
-PIPER_VOICE_URL="https://huggingface.co/CakeByVPBank/piper-pgl-v4-vi_VN-version39_epoch39/resolve/main/vi_VN-csa-voice-piper-v3-medium.onnx"
 LOG_DIR="$PROJECT_DIR/logs"
 WINDOWS_LLAMA_BIN="llamacpp/vulkan/llama-b11212/llama-server.exe"
 WINDOWS_MODEL="llamacpp/models/gemma-4-E2B-it-Q4_0.gguf"
@@ -151,12 +150,11 @@ check_requirements() {
     done
     ok "docker, curl"
 
-    [ -f "$HOME/$PIPER_VOICE" ] || die "Piper voice not found at ~/$PIPER_VOICE, run:
-    mkdir -p ~/piper/cake && curl -L -o ~/$PIPER_VOICE $PIPER_VOICE_URL && curl -L -o ~/$PIPER_VOICE.json $PIPER_VOICE_URL.json"
+    [ -f "$HOME/$PIPER_VOICE" ] || die "Piper voice not found at ~/$PIPER_VOICE, run: ./get_models.sh"
     ok "Piper voice"
 
     for part in encoder decoder joiner; do
-        [ -f "$HOME/gipformer/$part.int8.onnx" ] || die "gipformer $part.int8.onnx not found in ~/gipformer/"
+        [ -f "$HOME/gipformer/$part.int8.onnx" ] || die "gipformer $part.int8.onnx not found in ~/gipformer/, run: ./get_models.sh"
     done
     ok "gipformer"
 
