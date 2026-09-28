@@ -32,7 +32,7 @@ python3 -m venv .venv && .venv/bin/python -m pip install -r requirements.txt
 bash run.sh
 ```
 
-- Register a softphone as 1001 (password in `asterisk/config/pjsip.conf`) and dial 600.
+- Call with Zoiper 5: register it as 1001 (password in `asterisk/config/pjsip.conf`) and dial 600.
 - `pytest` runs the tests; the ones that need the model skip when it is not running.
 
 ## License
