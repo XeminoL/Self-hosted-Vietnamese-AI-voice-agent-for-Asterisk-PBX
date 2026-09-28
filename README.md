@@ -11,11 +11,15 @@ Zoiper --SIP--> Asterisk (Docker) --AudioSocket TCP--> switchboard.py
 
 ## Demo
 
+[![A scripted call to 600, click for the video](docs/demo-call.png)](docs/demo-call.mp4)
+
+[`docs/demo-call.mp4`](docs/demo-call.mp4), 60 s: a savings question, "that's wrong, I asked about gold", a card lock with the number keyed in and a yes, thanks and goodbye. The switchboard side is the current build as it sounds on the line. The caller is Piper speaker 1 sent through a μ-law phone codec, not a person. `tools/record_demo_call.py` records it.
+
+An earlier call made from Zoiper on the older build (Qwen3-4B on the iGPU, VieNeu voice), so the voice and timing there are not the current ones:
+
 ![Zoiper in a call to 600](docs/call.png)
 
 https://github.com/user-attachments/assets/eff0362e-6530-438b-a0b8-af9bb8bede9f
-
-The recording is from the older build (Qwen3-4B on the iGPU, VieNeu voice), so the voice and timing there are not the current ones.
 
 ## What it does
 
@@ -98,6 +102,20 @@ During a call the switchboard uses 0.3 of a core on average (1.8 at peak) and ab
 
 Two calls at once took up to 15 s per turn: llama-server has one slot, and the two conversations keep pushing each other's prompt out of the cache. That is why it holds the second caller instead.
 
+### 122 sentences, four voices
+
+`tools/spoken_test_set.tsv` has 122 caller sentences, each labelled with what the switchboard should do: one of the 19 topics, a lookup on the caller's own account, a transfer, a goodbye, or small talk. `tools/read_test_set.py` phones each one in as its own call, spoken by Piper Cake speakers 1 to 4 (the switchboard itself is speaker 0) through a μ-law phone codec. `tools/score_recordings.py` then reads the call logs.
+
+| Caller voice | Word error rate | Understood |
+|---|---|---|
+| speaker 1 | 1.3% | 119/122 |
+| speaker 2 | 1.7% | 119/122 |
+| speaker 3 | 4.4% | 116/122 |
+| speaker 4 | 4.9% | 115/122 |
+| all four | 3.1% of 3,288 words | 469/488 (96.1%) |
+
+Every miss started as a mishearing. "usd" was lost in all four voices, "để trống" came back as "để chống" in three, "chuyển" as "truyền" or "chuyện" in three, and "người thật hay máy" as "người thật hai máy" in two, which sends the caller to staff instead of answering. These are synthetic voices reading clean text. A person on a real line has not been measured yet; the same scripts score that run.
+
 ## Tests and tools
 
 ```bash
@@ -112,4 +130,6 @@ With the switchboard running:
 - `tools/measure_load.py` does the same while sampling CPU and RAM.
 - `tools/latency_report.py --since "2026-09-28 10:00"` prints the table above from the call logs.
 - `tools/chat.py "câu hỏi"` talks to the conversation by text, without a phone.
-- `tools/score_recordings.py` scores a real test run: start with `RECORD_CALLS=1 bash run.sh`, read the 122 lines of `tools/spoken_test_set.tsv` into Zoiper one per turn, then run it with `--since` set to the time of the first call. It prints the word error rate and how many were understood.
+- `tools/read_test_set.py --voice 1` phones in the 122 sentences with a Piper voice.
+- `tools/score_recordings.py --since "2026-09-28 10:37"` scores them from the call logs. For a run with a person, start with `RECORD_CALLS=1 bash run.sh` and read the lines into Zoiper one per turn.
+- `tools/record_demo_call.py /tmp/demo` records the demo call above, both directions, with the text and timing of each line.

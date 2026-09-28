@@ -48,18 +48,19 @@ def intent_of(turn):
     return "other"
 
 
-def spoken_turns(since):
-    return [event for call in read_calls() if call[0].get("clock", "") >= since
+def spoken_turns(since, until):
+    return [event for call in read_calls() if since <= call[0].get("clock", "") < until
             for event in call if event["event"] == "turn" and event.get("audio_s")]
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--since", required=True, help="clock of the first test call, e.g. '2026-09-29 20:00'")
+    parser.add_argument("--until", default="9999", help="ignore calls that started at or after this clock")
     args = parser.parse_args()
 
     labelled = [line.split("\t") for line in TEST_SET.read_text(encoding="utf-8").splitlines() if line.strip()]
-    turns = spoken_turns(args.since)
+    turns = spoken_turns(args.since, args.until)
     if len(turns) != len(labelled):
         print(f"warning: {len(turns)} spoken turns but {len(labelled)} sentences, "
               f"pairing the first {min(len(turns), len(labelled))} in order")
