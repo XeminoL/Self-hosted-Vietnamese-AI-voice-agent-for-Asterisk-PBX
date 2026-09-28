@@ -1,0 +1,35 @@
+{
+  "0901234567": {
+    "name": "Nguyễn Văn An",
+    "account_number": "1903 8888 0001",
+    "balance": 12450000,
+    "card_locked": false,
+    "daily_limit": 20000000,
+    "transactions": [
+      {"date": "02/09", "kind": "chuyển đi", "amount": 500000, "counterparty": "Nguyễn Thị Bình"},
+      {"date": "01/09", "kind": "nhận về", "amount": 8000000, "counterparty": "Công ty TNHH Minh Long"},
+      {"date": "31/08", "kind": "rút ATM", "amount": 2000000, "counterparty": "ATM Lê Văn Sỹ"}
+    ]
+  },
+  "0987654321": {
+    "name": "Trần Thị Mai",
+    "account_number": "1903 8888 0002",
+    "balance": 850000,
+    "card_locked": false,
+    "daily_limit": 5000000,
+    "transactions": [
+      {"date": "02/09", "kind": "thanh toán", "amount": 120000, "counterparty": "Cửa hàng tiện lợi Minh Châu"},
+      {"date": "30/08", "kind": "nhận về", "amount": 1000000, "counterparty": "Trần Văn Hùng"}
+    ]
+  },
+  "0912345678": {
+    "name": "Lê Hoàng Nam",
+    "account_number": "1903 8888 0003",
+    "balance": 47300000,
+    "card_locked": true,
+    "daily_limit": 50000000,
+    "transactions": [
+      {"date": "28/08", "kind": "chuyển đi", "amount": 15000000, "counterparty": "Phạm Quốc Bảo"}
+    ]
+  }
+}

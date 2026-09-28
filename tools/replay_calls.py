@@ -1,7 +1,6 @@
 import argparse
 import json
 import socket
-import struct
 import sys
 import threading
 import time
@@ -13,13 +12,15 @@ import numpy
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "app"))
 
-from models import SpeechRecognizer, SpeechSynthesizer
+from audiosocket import TYPE_AUDIO, TYPE_DTMF, TYPE_HANGUP, TYPE_UUID, build_frame
+from speech import SpeechRecognizer, SpeechSynthesizer
 
 HOST = "127.0.0.1"
 PORT = 9092
 CALLER_VOICE = 1
 FRAME_BYTES = 320
 FRAME_SECONDS = 0.02
+HEADER_BYTES = 3
 LOUD = 500
 QUIET_AFTER_REPLY = 1.2
 REPLY_LIMIT_SECONDS = 40.0
@@ -27,54 +28,59 @@ QUEUE_LIMIT_SECONDS = 120.0
 START_GAP_SECONDS = 1.0
 LINE_FREE_SECONDS = 3.0
 KEY_GAP_FRAMES = 5
-RESULTS_FILE = Path(__file__).resolve().parent / "ket-qua-replay.json"
+HANG_UP_WAIT_SECONDS = 3
+SHORTER_THAN_SECONDS = 3.0
+PRESS_HASH_AFTER_SECONDS = 1.0
+RESULTS_FILE = Path(__file__).resolve().parent / "results-replay.json"
+
+HANGS_UP = "<hangs up>"
+NEW_WORDING = "<new wording>"
+CUT_SHORT = "<cut short>"
 
 SCENARIOS = {
-    "khoa_the_dong_y": [
+    "lock_card_yes": [
         ("say", "tôi muốn khoá thẻ của tôi", ["bấm"]),
         ("keys", "0987654321#", ["xác nhận"]),
         ("say", "đúng rồi", ["thành công|từ trước"]),
         ("say", "cảm ơn em", ["thêm"]),
-        ("say", "dạ không ạ", ["cảm ơn", "HANGUP"]),
+        ("say", "dạ không ạ", ["cảm ơn", HANGS_UP]),
     ],
-    "khoa_the_tu_choi": [
+    "lock_card_no": [
         ("keys", "4", ["bấm"]),
         ("keys", "0901234567#", ["xác nhận"]),
         ("say", "thôi không khoá nữa", ["không làm nữa"]),
-        ("say", "vậy thôi tạm biệt em", ["cảm ơn", "HANGUP"]),
+        ("say", "vậy thôi tạm biệt em", ["cảm ơn", HANGS_UP]),
     ],
-    "menu_phim": [
+    "key_menu": [
         ("keys", "9", ["bấm một", "số dư"]),
         ("keys", "1", ["bấm"]),
         ("keys", "0912345678#", ["bốn mươi bảy triệu"]),
     ],
-    "hoi_tai_lieu": [
+    "documents": [
         ("say", "lãi suất tiết kiệm bao nhiêu", ["phần trăm"]),
-        ("say", "lãi suất tiết kiệm bao nhiêu", ["phần trăm", "DIFFERENT"]),
+        ("say", "lãi suất tiết kiệm bao nhiêu", ["phần trăm", NEW_WORDING]),
         ("say", "không phải, tôi hỏi giá vàng", ["xin lỗi", "vàng"]),
         ("say", "chuyển tiền mất phí không", ["bảy nghìn"]),
     ],
-    "ngai_bam_so": [
+    "will_not_dial": [
         ("say", "số dư tài khoản của tôi bao nhiêu", ["bấm"]),
         ("say", "tôi không có điện thoại ở đây", ["nhân viên"]),
         ("say", "ừ chuyển đi", ["nhân viên"]),
     ],
-    "im_lang": [
+    "silence": [
         ("silence", 9.5, ["còn nghe máy"]),
-        ("silence", 9.5, ["cúp máy", "HANGUP"]),
+        ("silence", 9.5, ["cúp máy", HANGS_UP]),
     ],
-    "bam_thang_ngung_doc": [
-        ("say", "chi nhánh mở cửa mấy giờ", ["SHORT"]),
+    "hash_stops_the_reply": [
+        ("say", "chi nhánh mở cửa mấy giờ", [CUT_SHORT]),
     ],
-    "xep_hang": [
+    "second_caller_waits": [
         ("wait", QUEUE_LIMIT_SECONDS, ["xin nghe"]),
         ("say", "giá vàng hôm nay", ["vàng"]),
     ],
 }
-GREETING_EXPECTED = {"xep_hang": ["đang bận"]}
-BUSY_LINE_MAKER = {"xep_hang": "hoi_tai_lieu"}
-SHORTER_THAN_SECONDS = 3.0
-PRESS_HASH_AFTER_SECONDS = 1.0
+GREETING_EXPECTED = {"second_caller_waits": ["đang bận"]}
+KEEPS_THE_LINE_BUSY = {"second_caller_waits": "documents"}
 
 
 def plain(text):
@@ -85,7 +91,7 @@ def plain(text):
 class Call:
     def __init__(self):
         self.sock = socket.create_connection((HOST, PORT))
-        self.sock.sendall(struct.pack(">BH", 0x01, 16) + uuid.uuid4().bytes)
+        self.sock.sendall(build_frame(TYPE_UUID, uuid.uuid4().bytes))
         self.received = []
         self.lock = threading.Lock()
         self.hung_up = False
@@ -102,23 +108,22 @@ class Call:
             if not data:
                 break
             buffer += data
-            while len(buffer) >= 3:
-                kind, length = struct.unpack(">BH", buffer[:3])
-                if len(buffer) < 3 + length:
+            while len(buffer) >= HEADER_BYTES:
+                kind, length = buffer[0], int.from_bytes(buffer[1:HEADER_BYTES], "big")
+                if len(buffer) < HEADER_BYTES + length:
                     break
-                payload, buffer = buffer[3:3 + length], buffer[3 + length:]
-                if kind == 0x10 and payload:
+                payload, buffer = buffer[HEADER_BYTES:HEADER_BYTES + length], buffer[HEADER_BYTES + length:]
+                if kind == TYPE_AUDIO and payload:
                     loud = numpy.abs(numpy.frombuffer(payload, dtype="<i2")).max() > LOUD
                     with self.lock:
                         self.received.append((time.monotonic(), payload, loud))
-                elif kind == 0x00:
+                elif kind == TYPE_HANGUP:
                     self.hung_up = True
         self.hung_up = True
 
     def tick(self, frame=None):
-        frame = frame if frame is not None else bytes(FRAME_BYTES)
         try:
-            self.sock.sendall(struct.pack(">BH", 0x10, len(frame)) + frame)
+            self.sock.sendall(build_frame(TYPE_AUDIO, frame if frame is not None else bytes(FRAME_BYTES)))
         except OSError:
             self.hung_up = True
         self.clock += FRAME_SECONDS
@@ -132,7 +137,7 @@ class Call:
 
     def send_keys(self, keys):
         for key in keys:
-            self.sock.sendall(struct.pack(">BH", 0x03, 1) + key.encode())
+            self.sock.sendall(build_frame(TYPE_DTMF, key.encode()))
             for _ in range(KEY_GAP_FRAMES):
                 self.tick()
 
@@ -155,8 +160,28 @@ class Call:
         audio = b"".join(payload for t, payload in frames if loud[0] - 0.1 <= t <= loud[-1] + 0.1)
         return {"first_sound_s": loud[0] - since, "length_s": loud[-1] - loud[0], "audio": audio}
 
+    def wait_for_hang_up(self):
+        deadline = time.monotonic() + HANG_UP_WAIT_SECONDS
+        while not self.hung_up and time.monotonic() < deadline:
+            self.tick()
+        return self.hung_up
+
     def close(self):
         self.sock.close()
+
+
+def heard_all(heard, expected):
+    return all(plain(word) in plain(heard) for word in expected)
+
+
+def check(expected, call, reply, heard, previous_heard):
+    if expected == HANGS_UP:
+        return call.wait_for_hang_up()
+    if expected == NEW_WORDING:
+        return plain(heard) != plain(previous_heard or "")
+    if expected == CUT_SHORT:
+        return reply["length_s"] < SHORTER_THAN_SECONDS
+    return any(plain(choice) in plain(heard) for choice in expected.split("|"))
 
 
 def run_scenario(name, caller_voice, recognizer, recognizer_lock):
@@ -164,10 +189,8 @@ def run_scenario(name, caller_voice, recognizer, recognizer_lock):
     greeting = call.wait_for_reply(time.monotonic())
     with recognizer_lock:
         greeting_heard = recognizer.transcribe(greeting["audio"]) if greeting else ""
-    expected_greeting = GREETING_EXPECTED.get(name, ["xin nghe"])
     turns = [{"step": "greeting", "first_sound_s": greeting and round(greeting["first_sound_s"], 2),
-              "heard": greeting_heard,
-              "ok": all(plain(word) in plain(greeting_heard) for word in expected_greeting)}]
+              "heard": greeting_heard, "ok": heard_all(greeting_heard, GREETING_EXPECTED.get(name, ["xin nghe"]))}]
     previous_heard = None
     for kind, content, expected in SCENARIOS[name]:
         if kind == "say":
@@ -180,46 +203,32 @@ def run_scenario(name, caller_voice, recognizer, recognizer_lock):
                     break
                 call.tick()
         caller_stopped = time.monotonic()
-        press_after = PRESS_HASH_AFTER_SECONDS if "SHORT" in expected else None
         if kind == "wait":
             reply = call.wait_for_reply(caller_stopped, limit=content)
+        elif kind == "silence":
+            reply = call.wait_for_reply(caller_stopped - content)
         else:
-            reply = call.wait_for_reply(caller_stopped if kind != "silence" else caller_stopped - content,
-                                        press_after)
+            reply = call.wait_for_reply(caller_stopped, PRESS_HASH_AFTER_SECONDS if CUT_SHORT in expected else None)
         if reply is None:
             turns.append({"step": f"{kind} {content}", "ok": False, "heard": "(no reply)"})
             break
         with recognizer_lock:
             heard = recognizer.transcribe(reply["audio"])
-        checks = []
-        for word in expected:
-            if word == "HANGUP":
-                deadline = time.monotonic() + 3
-                while not call.hung_up and time.monotonic() < deadline:
-                    call.tick()
-                checks.append(call.hung_up)
-            elif word == "DIFFERENT":
-                checks.append(plain(heard) != plain(previous_heard or ""))
-            elif word == "SHORT":
-                checks.append(reply["length_s"] < SHORTER_THAN_SECONDS)
-            else:
-                checks.append(any(plain(choice) in plain(heard) for choice in word.split("|")))
-        turns.append({"step": f"{kind} {content}", "ok": all(checks), "heard": heard,
-                      "first_sound_s": round(reply["first_sound_s"], 2),
-                      "length_s": round(reply["length_s"], 2), "expected": expected,
-                      "timed": kind not in ("silence", "wait")})
+        passed = all(check(word, call, reply, heard, previous_heard) for word in expected)
+        turns.append({"step": f"{kind} {content}", "ok": passed, "heard": heard,
+                      "first_sound_s": round(reply["first_sound_s"], 2), "length_s": round(reply["length_s"], 2),
+                      "expected": expected, "timed": kind not in ("silence", "wait")})
         previous_heard = heard
     call.close()
-    return {"scenario": name, "ok": all(t.get("ok", True) for t in turns) and len(turns) > 1,
-            "turns": turns}
+    return {"scenario": name, "ok": len(turns) > 1 and all(turn["ok"] for turn in turns), "turns": turns}
 
 
 def print_result(result):
     print(f"\n=== {result['scenario']}: {'PASS' if result['ok'] else 'FAIL'}")
     for turn in result["turns"]:
-        mark = {True: " ok ", False: "FAIL", None: "    "}[turn.get("ok")]
+        mark = " ok " if turn["ok"] else "FAIL"
         timing = f"{turn['first_sound_s']:5.2f}s" if turn.get("first_sound_s") is not None else "   -  "
-        print(f"  {mark} {timing}  {turn['step']:30s} -> {turn.get('heard', '')}")
+        print(f"  {mark} {timing}  {turn['step']:32s} -> {turn.get('heard', '')}")
 
 
 def main():
@@ -241,14 +250,14 @@ def main():
                 spoken[sentence] = synthesizer.speak(sentence)
             return spoken[sentence]
 
-    for scenario in set(args.scenarios) | {BUSY_LINE_MAKER.get(s, s) for s in args.scenarios}:
+    groups = [args.scenarios] if args.together else [
+        [KEEPS_THE_LINE_BUSY[scenario], scenario] if scenario in KEEPS_THE_LINE_BUSY else [scenario]
+        for scenario in args.scenarios]
+    for scenario in {name for group in groups for name in group}:
         for kind, content, _ in SCENARIOS[scenario]:
             if kind == "say":
                 caller_voice(content)
 
-    groups = [args.scenarios] if args.together else [
-        [BUSY_LINE_MAKER[scenario], scenario] if scenario in BUSY_LINE_MAKER else [scenario]
-        for scenario in args.scenarios]
     results = []
     for group in groups:
         time.sleep(LINE_FREE_SECONDS)
@@ -267,12 +276,12 @@ def main():
             print_result(result)
             results.append(result)
 
-    timed = sorted(t["first_sound_s"] for r in results for t in r["turns"][1:]
-                   if t.get("timed") and t.get("first_sound_s") is not None)
-    passed = sum(r["ok"] for r in results)
+    timed = sorted(turn["first_sound_s"] for result in results for turn in result["turns"][1:]
+                   if turn.get("timed") and turn.get("first_sound_s") is not None)
+    passed = sum(result["ok"] for result in results)
     print(f"\n{passed}/{len(results)} scenarios passed")
     if timed:
-        print(f"reply starts after caller stops: p50 {numpy.percentile(timed, 50):.2f}s, "
+        print(f"reply starts after the caller stops: p50 {numpy.percentile(timed, 50):.2f}s, "
               f"p95 {numpy.percentile(timed, 95):.2f}s, max {timed[-1]:.2f}s over {len(timed)} turns")
     RESULTS_FILE.write_text(json.dumps({"together": args.together, "results": results},
                                        ensure_ascii=False, indent=1), encoding="utf-8")

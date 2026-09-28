@@ -2,11 +2,11 @@ import socket
 
 AMI_HOST = "127.0.0.1"
 AMI_PORT = 5038
-AMI_USER = "tongdai"
+AMI_USER = "switchboard"
 AMI_SECRET = "local-only"
 AMI_TIMEOUT_SECONDS = 3
-CALL_FAMILY = "tongdai"
-STAFF_CONTEXT = "noi-bo"
+CALL_FAMILY = "calls"
+STAFF_CONTEXT = "internal"
 STAFF_EXTENSION = "1002"
 
 

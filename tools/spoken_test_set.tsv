@@ -1,0 +1,122 @@
+lãi suất tiết kiệm bao nhiêu	savings_rate
+gửi tiết kiệm sáu tháng được bao nhiêu phần trăm	savings_rate
+tôi muốn gửi tiền kỳ hạn một năm thì lãi thế nào	savings_rate
+lãi tiết kiệm bên em hiện giờ là bao nhiêu	savings_rate
+cho hỏi lãi suất gửi tiền	savings_rate
+lãi suất vay bao nhiêu vậy em	loan_rate
+vay mua nhà lãi mấy phần trăm	loan_rate
+lãi vay tiêu dùng hiện nay thế nào	loan_rate
+cho tôi hỏi lãi suất vay	loan_rate
+bây giờ vay thì lãi bao nhiêu một năm	loan_rate
+tỷ giá đô la hôm nay bao nhiêu	usd_rate
+một đô bây giờ bao nhiêu tiền việt	usd_rate
+ngân hàng mua usd giá bao nhiêu	usd_rate
+cho hỏi tỷ giá ngoại tệ	usd_rate
+đô la hôm nay lên hay xuống	usd_rate
+giá vàng hôm nay bao nhiêu	gold_price
+một lượng vàng giá bao nhiêu em	gold_price
+vàng sjc hôm nay mua bán thế nào	gold_price
+cho tôi hỏi giá vàng	gold_price
+giờ mua vàng thì bao nhiêu một lượng	gold_price
+chuyển tiền có mất phí không	transfer_fee
+phí chuyển tiền sang ngân hàng khác là bao nhiêu	transfer_fee
+chuyển khác ngân hàng mất phí bao nhiêu	transfer_fee
+chuyển tiền mất bao nhiêu phí	transfer_fee
+chuyển trong ngân hàng có mất phí không	transfer_fee
+làm sao để chuyển tiền	how_to_transfer
+tôi muốn chuyển tiền thì làm thế nào	how_to_transfer
+cách chuyển tiền trên điện thoại	how_to_transfer
+chuyển tiền thế nào cho nhanh	how_to_transfer
+em chỉ tôi cách chuyển khoản với	how_to_transfer
+ngân hàng mở cửa mấy giờ	opening_hours
+mấy giờ chi nhánh đóng cửa	opening_hours
+thứ bảy có làm việc không	opening_hours
+giờ làm việc của ngân hàng thế nào	opening_hours
+chi nhánh mở cửa mấy giờ vậy	opening_hours
+hạn mức chuyển tiền một ngày là bao nhiêu	default_limit
+mỗi ngày được chuyển tối đa bao nhiêu	default_limit
+muốn đổi hạn mức thì làm sao	default_limit
+hạn mức mặc định là bao nhiêu	default_limit
+cho hỏi về hạn mức chuyển khoản	default_limit
+tôi bị mất thẻ rồi phải làm sao	lost_card
+thẻ mất thì làm gì em	lost_card
+lỡ làm rơi thẻ ngân hàng thì sao	lost_card
+nếu mất thẻ atm thì xử lý thế nào	lost_card
+thẻ tôi bị mất ngoài đường	lost_card
+tôi quên mật khẩu ứng dụng	forgot_password
+không đăng nhập được thì làm sao	forgot_password
+quên mật khẩu thì lấy lại thế nào	forgot_password
+làm sao đặt lại mật khẩu	forgot_password
+tôi không nhớ mật khẩu đăng nhập	forgot_password
+tôi muốn mở tài khoản mới	open_account
+mở tài khoản cần những gì	open_account
+làm thẻ mới mất bao lâu	open_account
+mở tài khoản online được không	open_account
+cho tôi hỏi thủ tục mở thẻ	open_account
+phí thường niên của thẻ là bao nhiêu	annual_fee
+thẻ có mất phí hằng năm không	annual_fee
+một năm phải trả phí thẻ bao nhiêu	annual_fee
+phí thường niên năm đầu có miễn không	annual_fee
+cho hỏi phí năm của thẻ ghi nợ	annual_fee
+rút tiền ở atm có mất phí không	atm_withdrawal
+rút tiền ở cây ngân hàng khác mất bao nhiêu	atm_withdrawal
+phí rút tiền là bao nhiêu	atm_withdrawal
+rút tiền cây atm có tốn tiền không	atm_withdrawal
+cho hỏi phí rút tiền mặt	atm_withdrawal
+chuyển tiền bao lâu thì tới	transfer_time
+chuyển khác ngân hàng mấy phút thì nhận được	transfer_time
+sao chuyển lâu vậy	transfer_time
+chuyển buổi tối thì bao lâu tới	transfer_time
+chuyển tiền mất mấy phút	transfer_time
+tôi muốn vay tiền thì cần gì	loan_documents
+thủ tục vay gồm những gì	loan_documents
+hồ sơ vay cần giấy tờ gì	loan_documents
+vay tiền có cần thế chấp không	loan_documents
+muốn vay cần chuẩn bị gì em	loan_documents
+tài khoản phải để lại tối thiểu bao nhiêu	minimum_balance
+số dư tối thiểu là bao nhiêu	minimum_balance
+duy trì tài khoản cần bao nhiêu tiền	minimum_balance
+có cần giữ tiền trong tài khoản không	minimum_balance
+tài khoản để trống được không	minimum_balance
+chi nhánh gần nhất ở đâu	branches
+ngân hàng có phòng giao dịch ở đâu	branches
+địa chỉ chi nhánh ở đâu vậy	branches
+tôi muốn tìm chi nhánh gần nhà	branches
+ngân hàng có ở đà nẵng không	branches
+em tên gì	about_us
+đây là ngân hàng nào vậy	about_us
+bạn là ai	about_us
+tổng đài của ngân hàng gì đây	about_us
+em là người thật hay máy	automated_assistant
+cho tôi biết số dư tài khoản	own_account
+tài khoản của tôi còn bao nhiêu tiền	own_account
+kiểm tra số dư giúp tôi	own_account
+giao dịch gần nhất của tôi là gì	own_account
+tôi muốn xem giao dịch gần đây	own_account
+hạn mức thẻ của tôi là bao nhiêu	own_account
+khoá thẻ của tôi giúp em	own_account
+tôi muốn khoá thẻ ngay	own_account
+thẻ của tôi còn dùng được không	own_account
+xem giúp tôi tiền lương đã vào chưa	own_account
+tôi vừa chuyển tiền cho ai vậy	own_account
+số dư của mình còn bao nhiêu	own_account
+cho tôi gặp nhân viên	transfer
+tôi muốn nói chuyện với người thật	transfer
+chuyển máy cho tổng đài viên giúp tôi	transfer
+cho tôi gặp người	transfer
+tôi cần nhân viên hỗ trợ	transfer
+nối máy cho nhân viên đi em	transfer
+cảm ơn em tạm biệt	goodbye
+vậy thôi cảm ơn nhé	goodbye
+tạm biệt em	goodbye
+hết rồi cảm ơn	goodbye
+không cần gì nữa đâu	goodbye
+thế thôi chào em	goodbye
+hôm nay trời mưa quá	other
+em ăn cơm chưa	other
+kể cho tôi một chuyện vui	other
+thời tiết hôm nay thế nào	other
+giá xăng hôm nay bao nhiêu	other
+tôi đang buồn quá	other
+em có biết hát không	other
+mai có bão không em	other

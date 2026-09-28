@@ -1,0 +1,10 @@
+{
+  "lookups": {
+    "1": "check_balance",
+    "2": "last_transaction",
+    "3": "daily_limit",
+    "4": "lock_card"
+  },
+  "staff": "0",
+  "default_after_dialing": "check_balance"
+}

@@ -1,11 +1,8 @@
 __pycache__/
 *.pyc
 .venv/
-app/calls/
-*.wav
-*.sln
 .pytest_cache/
-tests/ket-qua-*.txt
+app/calls/
 logs/
-ket-qua-*.txt
-tests/ket-qua-*.json
+tools/results-*.json
+*.wav

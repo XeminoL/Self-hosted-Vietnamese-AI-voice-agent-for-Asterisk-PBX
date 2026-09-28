@@ -1,10 +1,6 @@
 import collections
-import sys
 import threading
 import time
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "app"))
 
 import switchboard
 from audiosocket import ConnectionClosed, TYPE_AUDIO, TYPE_DTMF
@@ -124,7 +120,7 @@ def test_caller_waits_then_gives_up_when_every_line_is_busy(monkeypatch):
     log = type("Log", (), {"write": lambda self, *args, **fields: None})()
     assert not switchboard.wait_for_a_free_line(channel, log)
     channel.hang_up()
-    assert spoken == [switchboard.HOLD_NOTICE, switchboard.BUSY_GOODBYE]
+    assert spoken == [switchboard.PHRASES["hold_notice"], switchboard.PHRASES["busy_goodbye"]]
 
 
 def test_caller_gets_the_line_as_soon_as_it_frees(monkeypatch):

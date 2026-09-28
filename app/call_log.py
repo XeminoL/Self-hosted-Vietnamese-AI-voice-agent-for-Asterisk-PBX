@@ -6,7 +6,7 @@ import wave
 
 CALLS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "calls")
 SHORT_ID_LENGTH = 8
-RECORD_SWITCH = "TONGDAI_RECORD"
+RECORD_SWITCH = "RECORD_CALLS"
 AUDIO_RATE = 8000
 
 _write_lock = threading.Lock()

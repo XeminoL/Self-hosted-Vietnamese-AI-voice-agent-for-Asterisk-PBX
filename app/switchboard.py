@@ -5,12 +5,12 @@ import time
 
 import webrtcvad
 
-from audiosocket import (AudioSocketConnection, ConnectionClosed, TYPE_AUDIO,
-                         TYPE_DTMF)
+import llm_client
+from audiosocket import AudioSocketConnection, ConnectionClosed, TYPE_AUDIO, TYPE_DTMF
 from call_log import CallLog
-from conversation import (GOODBYE, GOODBYE_AFTER_SILENCE, STILL_THERE, Conversation,
-                          warm_up_llm)
-from models import SAMPLE_RATE, SpeechRecognizer, SpeechSynthesizer
+from conversation import Conversation
+from domain import PHRASES
+from speech import SAMPLE_RATE, SpeechRecognizer, SpeechSynthesizer
 from staff_transfer import TransferFailed, transfer_to_staff
 
 HOST = "127.0.0.1"
@@ -38,13 +38,8 @@ MAX_ACTIVE_CALLS = 1
 QUEUE_WAIT_FRAMES = 3000
 FRAMES_TO_WAIT_FOR_TRANSFER = 250
 SPOKEN_AUDIO_CACHE_SIZE = 300
-
 MAX_TURNS = 40
-GREETING = "Dạ em xin nghe. Anh chị cứ nói điều cần hỏi, hoặc bấm phím chín để nghe các phím ạ."
-TRANSFER_NOTICE = "Dạ em chuyển anh chị cho nhân viên, anh chị giữ máy giúp em."
-TRANSFER_FAILED = "Dạ hiện em chưa nối được nhân viên, anh chị gọi lại sau giúp em nhé. Em chào anh chị ạ."
-HOLD_NOTICE = "Dạ tổng đài đang bận, anh chị vui lòng giữ máy trong giây lát ạ."
-BUSY_GOODBYE = "Dạ tổng đài vẫn đang bận, anh chị vui lòng gọi lại sau ạ. Em cảm ơn anh chị."
+SHORT_ID_LENGTH = 8
 
 recognizer = None
 synthesizer = None
@@ -92,16 +87,16 @@ class Speaker:
 def load_models():
     global recognizer, synthesizer
 
-    print("Dang tai gipformer ...")
-    started = time.time()
+    print("Loading gipformer ...")
+    started = time.monotonic()
     recognizer = SpeechRecognizer()
-    print(f"  xong sau {time.time() - started:.0f}s")
+    print(f"  done in {time.monotonic() - started:.0f}s")
 
-    print("Dang tai giong Piper ...")
-    started = time.time()
+    print("Loading the Piper voice ...")
+    started = time.monotonic()
     synthesizer = SpeechSynthesizer()
-    speak(GREETING)
-    print(f"  xong sau {time.time() - started:.0f}s")
+    speak(PHRASES["greeting"])
+    print(f"  done in {time.monotonic() - started:.0f}s")
 
 
 def speak(sentence):
@@ -204,87 +199,87 @@ class VoiceChannel:
         elif key in END_OF_NUMBER_KEYS and self.digits_so_far:
             self._finish_digits()
         elif key == STOP_TALKING_KEY and self.speaker.is_speaking():
-            self.cut_short = True
-            self.speaker.stop_talking()
-            print(f"[{self.call_id}] NGUOI GOI BAM # -> ngung doc")
+            self._stop_talking()
+            print(f"[{self.call_id}] caller pressed #, reply stopped")
 
     def _finish_digits_after_a_pause(self):
         single_key = len(self.digits_so_far) == 1 and not self.expects_number()
-        if single_key and self.frames_since_digit >= MENU_KEY_WAIT_FRAMES:
-            self._finish_digits()
-        elif self.frames_since_digit >= NUMBER_WAIT_FRAMES:
+        waited = MENU_KEY_WAIT_FRAMES if single_key else NUMBER_WAIT_FRAMES
+        if self.frames_since_digit >= waited:
             self._finish_digits()
 
     def _finish_digits(self):
         digits, self.digits_so_far = self.digits_so_far, ""
         if len(digits) == 1 and not self.expects_number():
             self.menu_key = digits
-            print(f"[{self.call_id}] NGUOI GOI BAM PHIM: {digits}")
+            print(f"[{self.call_id}] caller pressed key {digits}")
         else:
             self.dialed_number = digits
-            print(f"[{self.call_id}] NGUOI GOI BAM SO: {digits}")
+            print(f"[{self.call_id}] caller dialed {digits}")
         if self.speaker.is_speaking():
-            self.cut_short = True
-            self.speaker.stop_talking()
+            self._stop_talking()
+
+    def _stop_talking(self):
+        self.cut_short = True
+        self.speaker.stop_talking()
 
     def _is_speech(self, frame):
-        return (len(frame) == BYTES_PER_FRAME
-                and self.vad.is_speech(frame, SAMPLE_RATE))
+        return len(frame) == BYTES_PER_FRAME and self.vad.is_speech(frame, SAMPLE_RATE)
 
 
 def serve_call(channel, conversation, log):
     channel.expects_number = conversation.expects_number
     nudged = False
     for _ in range(MAX_TURNS):
-        audio_bytes = channel.listen_until_caller_stops()
-        if audio_bytes is None:
+        audio = channel.listen_until_caller_stops()
+        if audio is None:
             if nudged:
-                print(f"[{channel.call_id}] IM LANG LAU -> chao roi cup")
+                print(f"[{channel.call_id}] silent again, saying goodbye")
                 log.write("silence", action="goodbye")
-                channel.say(GOODBYE_AFTER_SILENCE)
+                channel.say(PHRASES["goodbye_after_silence"])
                 return "silence"
             nudged = True
-            print(f"[{channel.call_id}] IM LANG -> hoi con nghe khong")
+            print(f"[{channel.call_id}] silent, asking if the caller is still there")
             log.write("silence", action="nudge")
-            channel.say(STILL_THERE)
+            channel.say(PHRASES["still_there"])
             continue
         nudged = False
         caller_stopped = time.monotonic()
 
-        transcript, asr_seconds = "", 0.0
-        if audio_bytes:
-            transcript = recognizer.transcribe(audio_bytes)
-            asr_seconds = time.monotonic() - caller_stopped
-            print(f"[{channel.call_id}] NGHE {asr_seconds:.1f}s "
-                  f"({len(audio_bytes) / (SAMPLE_RATE * 2):.1f}s tieng): {transcript or '(khong ra chu)'}")
+        transcript, hear_seconds = "", 0.0
+        if audio:
+            transcript = recognizer.transcribe(audio)
+            hear_seconds = time.monotonic() - caller_stopped
+            print(f"[{channel.call_id}] heard in {hear_seconds:.1f}s "
+                  f"({len(audio) / (SAMPLE_RATE * 2):.1f}s of speech): {transcript or '(no words)'}")
         dialed_number, menu_key = channel.take_keys()
 
         thinking_started = time.monotonic()
         result = conversation.respond(transcript, dialed_number, menu_key)
         think_seconds = time.monotonic() - thinking_started
-        for line in result.log:
-            print(f"    {line}")
+        for note in result.notes:
+            print(f"    {note}")
 
-        sentence = TRANSFER_NOTICE if result.transfer else result.reply
+        sentence = PHRASES["transfer_notice"] if result.transfer else result.reply
         played = channel.say(sentence)
-        print(f"[{channel.call_id}] NOI (piper {played['speak_s']:.1f}s"
-              f"{', co san' if played['remembered'] else ''}): {sentence}")
+        print(f"[{channel.call_id}] said (Piper {played['speak_s']:.1f}s"
+              f"{', from memory' if played['remembered'] else ''}): {sentence}")
         log.write("turn", heard=transcript, dialed=dialed_number, key=menu_key,
-                  audio_s=round(len(audio_bytes) / (SAMPLE_RATE * 2), 2),
-                  endpoint_s=ENDPOINT_WAIT_SECONDS if audio_bytes else 0.0,
-                  asr_s=round(asr_seconds, 2), think_s=round(think_seconds, 2),
+                  audio_s=round(len(audio) / (SAMPLE_RATE * 2), 2),
+                  endpoint_s=ENDPOINT_WAIT_SECONDS if audio else 0.0,
+                  asr_s=round(hear_seconds, 2), think_s=round(think_seconds, 2),
                   speak_s=played["speak_s"], remembered=played["remembered"],
                   reply_after_s=round(played["queued_at"] - caller_stopped, 2),
-                  reply=sentence, cut_short=played["cut_short"], notes=result.log,
-                  transfer=result.transfer, hang_up=result.hang_up,
-                  audio_file=log.save_audio(audio_bytes))
+                  reply=sentence, cut_short=played["cut_short"], notes=result.notes,
+                  topic=result.topic, lookup=result.lookup, transfer=result.transfer,
+                  hang_up=result.hang_up, audio_file=log.save_audio(audio))
 
         if result.transfer:
             return hand_over_to_staff(channel, log)
         if result.hang_up:
             return "goodbye"
 
-    channel.say(GOODBYE)
+    channel.say(PHRASES["goodbye"])
     return "too many turns"
 
 
@@ -292,11 +287,11 @@ def hand_over_to_staff(channel, log):
     try:
         target = transfer_to_staff(channel.connection.call_id)
     except TransferFailed as reason:
-        print(f"[{channel.call_id}] CHUYEN MAY THAT BAI: {reason}")
+        print(f"[{channel.call_id}] transfer failed: {reason}")
         log.write("transfer", ok=False, reason=str(reason))
-        channel.say(TRANSFER_FAILED)
+        channel.say(PHRASES["transfer_failed"])
         return "transfer failed"
-    print(f"[{channel.call_id}] DA CHUYEN {target} -> may nhan vien")
+    print(f"[{channel.call_id}] transferred {target} to staff")
     log.write("transfer", ok=True, channel=target)
     try:
         for _ in range(FRAMES_TO_WAIT_FOR_TRANSFER):
@@ -309,9 +304,9 @@ def hand_over_to_staff(channel, log):
 def wait_for_a_free_line(channel, log):
     if call_slots.acquire(blocking=False):
         return True
-    print(f"[{channel.call_id}] TONG DAI BAN -> cho")
+    print(f"[{channel.call_id}] line busy, caller on hold")
     log.write("busy", action="hold")
-    channel.say(HOLD_NOTICE)
+    channel.say(PHRASES["hold_notice"])
     waited_from = time.monotonic()
     for _ in range(QUEUE_WAIT_FRAMES):
         channel.read()
@@ -319,7 +314,7 @@ def wait_for_a_free_line(channel, log):
             log.write("busy", action="line free", waited_s=round(time.monotonic() - waited_from, 1))
             return True
     log.write("busy", action="gave up")
-    channel.say(BUSY_GOODBYE)
+    channel.say(PHRASES["busy_goodbye"])
     return False
 
 
@@ -331,9 +326,9 @@ class ConnectionHandler(socketserver.StreamRequestHandler):
         reason = "?"
         try:
             connection.read_frame()
-            call_id = (connection.call_id or "?")[:8]
+            call_id = (connection.call_id or "?")[:SHORT_ID_LENGTH]
             log = CallLog(connection.call_id or "unknown")
-            print(f"\n[{call_id}] === cuoc goi moi ===")
+            print(f"\n[{call_id}] === new call ===")
 
             channel = VoiceChannel(connection, call_id)
             got_a_line = False
@@ -341,7 +336,7 @@ class ConnectionHandler(socketserver.StreamRequestHandler):
                 got_a_line = wait_for_a_free_line(channel, log)
                 reason = "busy"
                 if got_a_line:
-                    channel.say(GREETING)
+                    channel.say(PHRASES["greeting"])
                     reason = serve_call(channel, Conversation(), log)
             finally:
                 if got_a_line:
@@ -351,14 +346,14 @@ class ConnectionHandler(socketserver.StreamRequestHandler):
                 connection.send_hangup()
         except ConnectionClosed as closed:
             reason = str(closed)
-            print(f"[{call_id}] ket thuc: {closed}")
+            print(f"[{call_id}] ended: {closed}")
         except OSError as error:
             reason = f"lost connection: {error}"
-            print(f"[{call_id}] mat ket noi: {error}")
+            print(f"[{call_id}] lost connection: {error}")
 
         if log:
             log.write("end", reason=reason)
-        print(f"[{call_id}] === het ===")
+        print(f"[{call_id}] === call over ===")
 
 
 class Server(socketserver.ThreadingTCPServer):
@@ -368,7 +363,7 @@ class Server(socketserver.ThreadingTCPServer):
 
 if __name__ == "__main__":
     load_models()
-    print(f"  (HIEU da nap san loi dan: {warm_up_llm()})")
+    print(f"  (model prompt ready: {llm_client.warm_up()})")
     with Server((HOST, PORT), ConnectionHandler) as server:
-        print(f"\nAudioSocket dang cho o {HOST}:{PORT} — goi so 600")
+        print(f"\nAudioSocket listening on {HOST}:{PORT}, dial 600")
         server.serve_forever()

@@ -36,7 +36,7 @@ class SpeechRecognizer:
         try:
             self._model.decode_stream(stream)
         except RuntimeError as error:
-            print(f"    (gipformer loi: {error})")
+            print(f"    (gipformer failed: {error})")
             return ""
         return stream.result.text.strip().lower()
 

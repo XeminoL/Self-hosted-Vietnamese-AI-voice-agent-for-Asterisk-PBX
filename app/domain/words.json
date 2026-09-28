@@ -1,0 +1,20 @@
+{
+  "own_account": ["của tôi", "của mình", "số dư", "giao dịch", "khoá thẻ"],
+  "asks_to_dial": ["bấm"],
+  "confirm_yes": ["đúng rồi", "đúng vậy", "phải rồi", "vâng", "đồng ý", "xác nhận", "ok", "okay", "khoá đi", "khoá luôn", "làm đi"],
+  "confirm_no": ["không", "thôi", "chưa", "đừng", "dừng lại", "huỷ", "bỏ", "bỏ qua"],
+  "objection_openings": ["không phải", "không đúng", "chưa đúng", "sai rồi", "sai", "nhầm rồi", "nhầm", "không không"],
+  "objection_anywhere": ["sai rồi", "nhầm rồi", "không hỏi", "hỏi cái khác", "trả lời sai", "không phải cái đó", "không phải cái này", "không phải ý đó"],
+  "fillers": ["ơ", "ờ", "à", "ủa", "em ơi", "chị ơi"],
+  "thanks": ["cảm ơn", "cám ơn", "thank you", "thanks"],
+  "closing": ["tạm biệt", "bye", "bai bai", "hết rồi", "vậy thôi", "thế thôi", "vậy được rồi", "không cần gì nữa", "không còn gì", "không cần nữa", "chào em", "chào em nhé"],
+  "nothing_more": ["không", "hết", "thôi", "khỏi", "vậy thôi", "đủ rồi"],
+  "reluctant_to_dial": ["không có điện thoại", "không có số", "không nhớ số", "quên số", "không nhớ", "không muốn", "không bấm", "sao phải", "tại sao", "để làm gì", "bấm làm gì", "không tiện"],
+  "annoyed": ["phiền quá", "phiền ghê", "lâu quá", "mệt quá", "bực quá", "chán quá", "rắc rối quá", "lằng nhằng"],
+  "asks_for_staff": ["nhân viên", "người thật", "tổng đài viên", "gặp người"],
+  "identity_questions": ["người thật hay", "hay máy", "là máy", "người máy", "robot", "trí tuệ nhân tạo", "máy tự động"],
+  "staff_yes": ["ừ", "ờ", "được", "có", "vâng", "dạ", "ok", "chuyển đi", "chuyển giúp", "chuyển luôn", "đồng ý"],
+  "staff_no": ["không", "thôi", "khỏi", "chưa", "đừng"],
+  "misheard_terms": ["số dư", "tài khoản", "hạn mức", "giao dịch", "chuyển khoản", "số điện thoại", "nhân viên"],
+  "real_phrases_that_look_misheard": ["có điện thoại"]
+}

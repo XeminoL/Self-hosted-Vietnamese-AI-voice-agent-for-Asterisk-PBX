@@ -1,7 +1,7 @@
 services:
   asterisk:
     image: andrius/asterisk:23.4.1_debian-forky
-    container_name: tongdai
+    container_name: switchboard-pbx
     network_mode: host
     restart: "no"
     volumes:

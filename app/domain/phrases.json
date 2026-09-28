@@ -1,0 +1,66 @@
+{
+  "greeting": "Dạ em xin nghe. Anh chị cứ nói điều cần hỏi, hoặc bấm phím chín để nghe các phím ạ.",
+  "menu": "Dạ anh chị bấm một để tra số dư, bấm hai nghe giao dịch gần nhất, bấm ba tra hạn mức, bấm bốn khoá thẻ, hoặc bấm không để gặp nhân viên ạ.",
+  "ask_for_phone_number": [
+    "Anh chị bấm số điện thoại rồi bấm dấu thăng ạ.",
+    "Dạ anh chị bấm giúp em số điện thoại, xong bấm dấu thăng nhé.",
+    "Dạ anh chị bấm số điện thoại đăng ký, rồi kết thúc bằng dấu thăng ạ."
+  ],
+  "why_we_need_the_number": "Dạ em cần số điện thoại để tìm đúng tài khoản của anh chị, số chỉ dùng để tra thôi ạ. Anh chị không tiện thì em chuyển qua nhân viên nhé?",
+  "out_of_scope": [
+    "Dạ chỗ này em không nắm được, em xin phép chuyển anh chị cho nhân viên nhé.",
+    "Dạ phần này em chưa hỗ trợ được, em chuyển anh chị qua nhân viên nhé.",
+    "Dạ việc này nhân viên sẽ giúp anh chị rõ hơn, em chuyển máy nhé."
+  ],
+  "did_not_catch": [
+    "Dạ em chưa nghe rõ ạ.",
+    "Dạ anh chị nói lại giúp em được không ạ?",
+    "Dạ em nghe chưa rõ, anh chị nói chậm lại giúp em nhé."
+  ],
+  "ask_again_after_mistake": [
+    "Dạ em xin lỗi, anh chị hỏi lại giúp em cụ thể hơn được không ạ?",
+    "Dạ em nhầm rồi, anh chị cần hỏi gì để em trả lời lại ạ?"
+  ],
+  "confirm": {
+    "lock_card": [
+      "Anh chị xác nhận khoá thẻ ạ?",
+      "Dạ anh chị chắc chắn muốn khoá thẻ phải không ạ?"
+    ]
+  },
+  "cancelled": "Dạ vâng, em không làm nữa ạ. Anh chị cần em hỗ trợ gì thêm không ạ?",
+  "offer_staff": "Dạ em xin lỗi đã làm anh chị phiền, anh chị có muốn em chuyển qua nhân viên không ạ?",
+  "anything_else": "Dạ không có gì ạ, anh chị cần em hỗ trợ gì thêm không ạ?",
+  "still_there": "Dạ anh chị còn nghe máy không ạ?",
+  "goodbye": "Dạ em cảm ơn anh chị đã gọi, chúc anh chị một ngày tốt lành ạ.",
+  "goodbye_after_silence": "Dạ em không nghe thấy anh chị nữa, em xin phép cúp máy. Chào anh chị ạ.",
+  "transfer_notice": "Dạ em chuyển anh chị cho nhân viên, anh chị giữ máy giúp em.",
+  "transfer_failed": "Dạ hiện em chưa nối được nhân viên, anh chị gọi lại sau giúp em nhé. Em chào anh chị ạ.",
+  "hold_notice": "Dạ tổng đài đang bận, anh chị vui lòng giữ máy trong giây lát ạ.",
+  "busy_goodbye": "Dạ tổng đài vẫn đang bận, anh chị vui lòng gọi lại sau ạ. Em cảm ơn anh chị.",
+  "openings": {
+    "polite": "Dạ ",
+    "repeat": "Dạ như em vừa nói, ",
+    "apology": "Dạ em xin lỗi, "
+  },
+  "lookups": {
+    "customer_not_found": "Dạ em không tìm thấy số điện thoại này trong hệ thống ạ.",
+    "check_balance": "Dạ số dư tài khoản của anh chị là {balance}.",
+    "last_transaction": "Dạ giao dịch gần nhất của anh chị là ngày {date}, {kind} {amount}, bên kia là {counterparty}.",
+    "no_transactions": "Dạ tài khoản của anh chị chưa có giao dịch nào ạ.",
+    "daily_limit": "Dạ hạn mức mỗi ngày của anh chị là {limit}.",
+    "card_locked": "Dạ em đã khoá thẻ của anh chị thành công.",
+    "card_already_locked": "Dạ thẻ của anh chị đã khoá từ trước rồi ạ."
+  },
+  "spoken_numbers": {
+    "million": "triệu",
+    "thousand": "nghìn",
+    "currency": "đồng",
+    "month": "tháng"
+  },
+  "for_the_model": {
+    "warm_up": "alo",
+    "no_words": "đây",
+    "dialed": "(số điện thoại đã bấm: {number})",
+    "pressed_key": "(bấm phím {key})"
+  }
+}

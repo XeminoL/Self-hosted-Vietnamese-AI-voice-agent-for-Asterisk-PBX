@@ -19,7 +19,7 @@ The recording is from the older build (Qwen3-4B on the iGPU, VieNeu voice), so t
 
 ## What it does
 
-- Answers 19 topics (interest rates, fees, opening hours, lost card...) from `app/docs/topics.json`. Each topic has three phrasings and the same sentence is never said twice in a row.
+- Answers 19 topics (interest rates, fees, opening hours, lost card...). Each topic has three phrasings and the same sentence is never said twice in a row.
 - Reads a balance, the last transaction or the daily limit, and locks a card, once the caller keys in a phone number and `#`. Locking asks for a yes first.
 - Key menu: 1 balance, 2 last transaction, 3 limit, 4 lock card, 0 staff, 9 reads the menu. `#` while it is talking cuts the reply short.
 - Transfers to extension 1002 when the caller asks for a person, says the answer is wrong twice in a row, or presses 0.
@@ -27,7 +27,25 @@ The recording is from the older build (Qwen3-4B on the iGPU, VieNeu voice), so t
 - One call at a time. A second caller hears a hold notice and is connected when the line frees.
 - Every call is written to `app/calls/*.jsonl` with the time each stage took.
 
-The model only decides when the rules cannot: a question with a clear topic keyword, a yes/no to a confirmation, a key press or a goodbye never reaches it.
+The model only decides when the rules cannot: a question with a clear topic keyword, a yes or no to a confirmation, a key press, a goodbye or a single word of noise never reaches it.
+
+## Using it for something other than a bank
+
+Everything the bank says or listens for lives in `app/domain/`. The code does not know it is a bank.
+
+| File | What to change |
+|---|---|
+| `topics.json` | the questions it can answer: three phrasings per topic and the keywords that pick it |
+| `figures.json` | numbers the answers quote, like prices or rates, so they can change without touching the sentences |
+| `phrases.json` | every fixed sentence: greeting, asking for a number, goodbye, hold notice, the menu |
+| `words.json` | what the caller might say: yes, no, goodbye, asking for a person, being annoyed |
+| `menu.json` | which key runs which lookup |
+| `customers.json` | the records a lookup reads, keyed by phone number |
+| `prompt.txt` | who the assistant is and what it should never make up |
+
+For a clinic, for example, the topics become opening hours, prices and which doctor works which day, and the customer records become appointments. The lookups themselves (check the balance, lock the card) are the only part written in code, in `app/accounts.py`: replace those four functions and the `LOOKUPS` table with the ones the new place needs, and list the ones that change data in `NEEDS_CONFIRMATION`.
+
+After changing `app/domain/`, run `pytest`. The first start after a change takes about 25 s longer while the model reads the new prompt.
 
 ## Models and licenses
 
@@ -64,30 +82,34 @@ A second softphone on `1002` receives the transfers.
 
 ## Numbers
 
-Measured on 28/09 on an i7-1185G7 (4 cores, no graphics card, 32 GB), with `tests/replay_calls.py` playing the eight calls right after a fresh start and `tests/latency_report.py` reading the call logs. The caller voice is Piper speaker 1. 18 spoken turns, 2 of them with a sentence the switchboard had already said.
+Measured on 28/09 on an i7-1185G7 (4 cores, no graphics card, 32 GB), with `tools/replay_calls.py` playing the eight calls right after a fresh start and `tools/latency_report.py` reading the call logs. The caller voice is Piper speaker 1. 20 spoken turns.
 
 | Stage | p50 | p95 |
 |---|---|---|
 | wait for the caller to stop | 0.80 s | 0.80 s |
-| hear | 0.08 s | 0.09 s |
-| understand | 0.02 s | 1.26 s |
-| speak | 0.49 s | 0.72 s |
-| caller stops -> reply starts | 1.48 s | 2.22 s |
+| hear | 0.09 s | 0.14 s |
+| understand | 0.10 s | 1.69 s |
+| speak | 0.51 s | 0.72 s |
+| caller stops -> reply starts | 1.49 s | 2.66 s |
 
-The slowest turn was 2.42 s. The p95 comes from turns that reach the model; the rest are answered by the rules. Under load the laptop throttles to about 54% of its clock.
+The slowest turn was 3.61 s. The p95 comes from turns that reach the model; the rest are answered by the rules. Under load the laptop throttles to about 54% of its clock.
 
 During a call the switchboard uses 0.3 of a core on average (1.8 at peak) and about 500 MB, llama-server 2.6 GB with peaks of 3 to 4 cores while it answers.
 
 Two calls at once took up to 15 s per turn: llama-server has one slot, and the two conversations keep pushing each other's prompt out of the cache. That is why it holds the second caller instead.
 
-## Tests
+## Tests and tools
 
 ```bash
 .venv/bin/python -m pytest
 ```
 
-121 tests. The two in `tests/test_model_battery.py` ask the running model 26 questions and skip when it is not up. With the switchboard running:
+The two tests in `tests/test_model_battery.py` ask the running model 26 questions and skip when it is not up. The rest use a scripted model.
 
-- `tests/replay_calls.py` plays eight calls (card lock yes and no, key menu, documents, a caller who will not dial, silence, `#`, a second caller on hold) and checks each reply by transcribing it.
-- `tests/measure_load.py` does the same while sampling CPU and RAM.
-- `tests/score_recordings.py` scores a real test run: start with `TONGDAI_RECORD=1 bash run.sh`, read the 122 lines of `tests/cau-thu.tsv` into Zoiper one per turn, then run it with `--since` set to the time of the first call. It prints the word error rate and how many were understood.
+With the switchboard running:
+
+- `tools/replay_calls.py` plays eight calls (card lock yes and no, key menu, documents, a caller who will not dial, silence, `#`, a second caller on hold) and checks each reply by transcribing it.
+- `tools/measure_load.py` does the same while sampling CPU and RAM.
+- `tools/latency_report.py --since "2026-09-28 10:00"` prints the table above from the call logs.
+- `tools/chat.py "câu hỏi"` talks to the conversation by text, without a phone.
+- `tools/score_recordings.py` scores a real test run: start with `RECORD_CALLS=1 bash run.sh`, read the 122 lines of `tools/spoken_test_set.tsv` into Zoiper one per turn, then run it with `--since` set to the time of the first call. It prints the word error rate and how many were understood.
