@@ -1,4 +1,4 @@
-A phone switchboard that answers callers in Vietnamese, running on a laptop CPU.
+A phone switchboard that answers callers in Vietnamese
 
 https://github.com/user-attachments/assets/5f15ed79-c462-433b-a1b7-56af63bedd98
 
@@ -6,7 +6,7 @@ https://github.com/user-attachments/assets/5f15ed79-c462-433b-a1b7-56af63bedd98
 
 ## Highlights
 
-- No GPU, no cloud: everything runs locally on an i7 laptop.
+- No GPU, no cloud: only CPU.
 - Replies about 1.5 s after the caller stops talking.
 - Looks up accounts after the caller keys in a number, and asks before changing anything.
 - Transfers to a real person on extension 1002 when it cannot help.
