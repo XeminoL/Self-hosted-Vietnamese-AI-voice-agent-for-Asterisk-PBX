@@ -1,4 +1,4 @@
-A phone switchboard that answers callers in Vietnamese
+A phone switchboard that answers callers in Vietnamese.
 
 https://github.com/user-attachments/assets/5f15ed79-c462-433b-a1b7-56af63bedd98
 
