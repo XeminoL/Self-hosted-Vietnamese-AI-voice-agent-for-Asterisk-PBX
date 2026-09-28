@@ -2,7 +2,9 @@
 
 A phone switchboard that answers callers in Vietnamese, running on a laptop CPU.
 
-[![A scripted call to 600](docs/demo-call.png)](docs/demo-call.mp4)
+[![A scripted call to 600](docs/demo-call.png)](docs/demo-call.mp3)
+
+Listen to the call: [docs/demo-call.mp3](docs/demo-call.mp3) (60 s, caller voice is synthetic).
 
 ## Highlights
 
