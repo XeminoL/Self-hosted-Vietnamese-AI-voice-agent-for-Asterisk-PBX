@@ -32,7 +32,7 @@ def test_read_balance_unknown_customer():
 
 def test_last_transaction_is_the_most_recent():
     sentence = bank_data.read_last_transaction("0901234567")
-    assert "02/09" in sentence and "500 nghìn" in sentence
+    assert "2 tháng 9" in sentence and "500 nghìn" in sentence
 
 
 def test_lock_card_succeeds_first_time():
@@ -78,3 +78,8 @@ def test_unrelated_sentence_is_not_consent():
 def test_every_action_is_callable():
     for name, action in bank_data.ACTIONS.items():
         assert action("0901234567"), name
+
+
+def test_dates_are_spoken_as_day_and_month():
+    assert bank_data.spell_date("02/09") == "2 tháng 9"
+    assert "ngày 2 tháng 9" in bank_data.read_last_transaction("0901234567")

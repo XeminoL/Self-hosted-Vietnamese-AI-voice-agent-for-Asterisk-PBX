@@ -31,7 +31,7 @@ CUSTOMERS = {
         "trang_thai_the": "đang hoạt động",
         "han_muc_ngay": 5_000_000,
         "giao_dich": [
-            ("02/09", "thanh toán", 120_000, "Cửa hàng Circle K"),
+            ("02/09", "thanh toán", 120_000, "Cửa hàng tiện lợi Minh Châu"),
             ("30/08", "nhận về", 1_000_000, "Trần Văn Hùng"),
         ],
     },
@@ -54,6 +54,11 @@ def spell_amount(amount):
     return f"{millions} triệu đồng" if millions else f"{thousands} nghìn đồng"
 
 
+def spell_date(day_and_month):
+    day, month = day_and_month.split("/")
+    return f"{int(day)} tháng {int(month)}"
+
+
 def _needs_customer(action):
     @functools.wraps(action)
     def wrapper(phone_number):
@@ -74,7 +79,7 @@ def read_last_transaction(customer):
     if not customer["giao_dich"]:
         return "Dạ tài khoản của anh chị chưa có giao dịch nào ạ."
     date, kind, amount, counterparty = customer["giao_dich"][0]
-    return (f"Dạ giao dịch gần nhất của anh chị là ngày {date}, "
+    return (f"Dạ giao dịch gần nhất của anh chị là ngày {spell_date(date)}, "
             f"{kind} {spell_amount(amount)}, bên kia là {counterparty}.")
 
 

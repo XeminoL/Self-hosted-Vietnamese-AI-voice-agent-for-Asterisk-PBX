@@ -98,3 +98,8 @@ def test_prompt_lists_every_topic_and_has_no_slot_left():
 def test_out_of_scope_sentence_matches_nothing():
     assert bank_docs.find_topic_by_keyword("thời tiết hôm nay thế nào") is None
     assert bank_docs.find_topic_by_keyword("kể cho tôi một câu chuyện") is None
+
+
+def test_several_keywords_of_one_topic_beat_one_longer_keyword():
+    assert bank_docs.find_topic_by_keyword("chi nhánh mở cửa mấy giờ") == "gio_lam_viec"
+    assert bank_docs.find_topic_by_keyword("chi nhánh ở đâu") == "chi_nhanh_o_dau"

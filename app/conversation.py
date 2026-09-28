@@ -8,13 +8,14 @@ import urllib.request
 
 from bank_data import (ACTIONS, CONFIRMATION_QUESTIONS, caller_consented,
                        needs_confirmation)
-from bank_docs import available_topics, find_topic_by_keyword, read_topic
+from bank_docs import available_topics, find_topic_by_keyword, keywords_found, read_topic
 from transcript_fixup import fix_near_homophones
 
 LLM_BASE = "http://127.0.0.1:8080"
 LLM_URL = LLM_BASE + "/v1/chat/completions"
 WARM_SLOT = 0
 MAX_REPLY_TOKENS = 20
+TEMPERATURE = 0
 REMEMBERED_TURNS = 4
 
 TAG_ACTION = "@TRA"
@@ -40,6 +41,19 @@ OBJECTION_ANYWHERE = ("sai rồi", "nhầm rồi", "không hỏi", "hỏi cái k
                       "không phải cái đó", "không phải cái này", "không phải ý đó")
 OBJECTION_FILLERS = ("ơ", "ờ", "à", "ủa", "em ơi", "chị ơi")
 OBJECTIONS_BEFORE_TRANSFER = 2
+STILL_THERE = "Dạ anh chị còn nghe máy không ạ?"
+GOODBYE = "Dạ em cảm ơn anh chị đã gọi, chúc anh chị một ngày tốt lành ạ."
+GOODBYE_AFTER_SILENCE = "Dạ em không nghe thấy anh chị nữa, em xin phép cúp máy. Chào anh chị ạ."
+ANYTHING_ELSE = "Dạ không có gì ạ, anh chị cần em hỗ trợ gì thêm không ạ?"
+THANKS = ("cảm ơn", "cám ơn", "thank you", "thanks")
+CLOSING = ("tạm biệt", "bye", "bai bai", "hết rồi", "vậy thôi", "thế thôi", "vậy được rồi",
+           "không cần gì nữa", "không còn gì", "không cần nữa", "chào em", "chào em nhé")
+NOTHING_MORE = ("không", "hết", "thôi", "khỏi", "vậy thôi", "đủ rồi")
+CANCELLED = "Dạ vâng, em không làm nữa ạ. Anh chị cần em hỗ trợ gì thêm không ạ?"
+MENU_ACTIONS = {"1": "tra_so_du", "2": "tra_giao_dich", "3": "tra_han_muc", "4": "khoa_the"}
+STAFF_KEY = "0"
+MENU = ("Dạ anh chị bấm một để tra số dư, bấm hai nghe giao dịch gần nhất, bấm ba tra hạn mức, "
+        "bấm bốn khoá thẻ, hoặc bấm không để gặp nhân viên ạ.")
 WHY_WE_NEED_THE_NUMBER = ("Dạ em cần số điện thoại để tìm đúng tài khoản của anh chị, số chỉ dùng để tra thôi ạ. "
                           "Anh chị không tiện thì em chuyển qua nhân viên nhé?")
 OFFER_STAFF = "Dạ em xin lỗi đã làm anh chị phiền, anh chị có muốn em chuyển qua nhân viên không ạ?"
@@ -49,6 +63,7 @@ RELUCTANT_TO_DIAL = ("không có điện thoại", "không có số", "không nh
 ANNOYED = ("phiền quá", "phiền ghê", "lâu quá", "mệt quá", "bực quá", "chán quá", "rắc rối quá",
            "lằng nhằng")
 ASKS_FOR_STAFF = ("nhân viên", "người thật", "tổng đài viên", "gặp người")
+IDENTITY_TOPIC = "tro_ly_tu_dong"
 YES_TO_STAFF = ("ừ", "ờ", "được", "có", "vâng", "dạ", "ok", "chuyển đi", "chuyển giúp",
                 "chuyển luôn", "đồng ý")
 NO_TO_STAFF = ("không", "thôi", "khỏi", "chưa", "đừng")
@@ -83,6 +98,7 @@ def ask_llm(history, slot=None):
     request_body = {
         "messages": [{"role": "system", "content": system_prompt()}] + history[-REMEMBERED_TURNS:],
         "max_tokens": MAX_REPLY_TOKENS,
+        "temperature": TEMPERATURE,
         "chat_template_kwargs": {"enable_thinking": False},
     }
     if slot is not None:
@@ -154,6 +170,11 @@ def parse_document_topic(sentence):
     return match_known_name(topic[0], available_topics())
 
 
+def parse_action_name(sentence):
+    parts = _arguments_after_tag(sentence, TAG_ACTION, 1)
+    return match_known_name(parts[0], ACTIONS) if parts else None
+
+
 def parse_action_command(sentence):
     parts = _arguments_after_tag(sentence, TAG_ACTION, 2)
     action = match_known_name(parts[0], ACTIONS) if parts else None
@@ -221,6 +242,17 @@ def is_objection(caller_sentence):
     return opens_with_objection or any(phrase in sentence for phrase in OBJECTION_ANYWHERE)
 
 
+def _without_keywords(caller_sentence, topic):
+    sentence = caller_sentence.lower()
+    for word in keywords_found(caller_sentence, topic):
+        sentence = sentence.replace(word.lower(), " ")
+    return sentence
+
+
+def asks_about_own_account(caller_sentence):
+    return any(word in caller_sentence.lower() for word in OWN_ACCOUNT_WORDS)
+
+
 def contains_digit(sentence):
     return any(char.isdigit() for char in sentence)
 
@@ -241,34 +273,62 @@ class Conversation:
         self.last_topic = None
         self.topic_this_turn = None
         self.objections_in_a_row = 0
+        self.pending_action = None
 
-    def respond(self, transcript, dialed_number):
+    def expects_number(self):
+        return self.pending_action is not None or self._just_asked_to_dial()
+
+    def _just_asked_to_dial(self):
+        return any(self.last_reply in group for group in SAME_MEANING_SENTENCES
+                   if ASK_FOR_PHONE_NUMBER in group)
+
+    def respond(self, transcript, dialed_number, menu_key=""):
         self.topic_this_turn = None
-        result = self._respond(transcript, dialed_number)
+        result = self._respond(transcript, dialed_number, menu_key)
         self.last_topic = self.topic_this_turn
         result.reply = say_differently(result.reply, self.last_reply)
         if result.reply:
             self.last_reply = result.reply
+        if not (self._just_asked_to_dial() or self.last_reply == WHY_WE_NEED_THE_NUMBER):
+            self.pending_action = None
         if self.history and self.history[-1]["role"] == "user":
-            self.history.append({"role": "assistant", "content": result.reply})
+            remembered = f"{TAG_DOCUMENT} {self.last_topic}" if self.last_topic else result.reply
+            self.history.append({"role": "assistant", "content": remembered})
         return result
 
-    def _respond(self, transcript, dialed_number):
+    def _respond(self, transcript, dialed_number, menu_key):
+        if menu_key:
+            self.history.append({"role": "user", "content": f"(bấm phím {menu_key})"})
+            return self._press(menu_key)
         if not transcript and not dialed_number:
             return TurnResult(reply=DID_NOT_CATCH)
 
         caller_sentence = self._build_caller_sentence(transcript, dialed_number)
         self.history.append({"role": "user", "content": caller_sentence})
 
+        if dialed_number and self.pending_action:
+            return self._run_pending_action(dialed_number)
+        if self.action_awaiting_confirmation and transcript:
+            return self._answer_confirmation(caller_sentence)
+
         reluctance = None if dialed_number or self.action_awaiting_confirmation \
             else self._handle_reluctance(caller_sentence)
         if reluctance:
             return reluctance
 
+        goodbye = None if dialed_number or self.action_awaiting_confirmation \
+            else self._handle_goodbye(caller_sentence)
+        if goodbye:
+            return goodbye
+
         if self.last_reply and not self.action_awaiting_confirmation and not dialed_number \
                 and is_objection(caller_sentence):
             return self._handle_objection(caller_sentence)
         self.objections_in_a_row = 0
+
+        topic = None if dialed_number else find_topic_by_keyword(caller_sentence)
+        if topic and not asks_about_own_account(_without_keywords(caller_sentence, topic)):
+            return TurnResult(self._read(topic), [f"tu khoa {topic} -> doc tai lieu, khong hoi LLM"])
 
         llm_sentence, ran_out_of_tokens, timings = ask_llm(self.history)
         log = [f"HIEU: {llm_sentence}"]
@@ -279,13 +339,49 @@ class Conversation:
         return self._decide(caller_sentence, llm_sentence, dialed_number,
                             ran_out_of_tokens, log)
 
+    def _press(self, key):
+        if key == STAFF_KEY:
+            return TurnResult(log=["phim 0 -> chuyen nhan vien"], transfer=True)
+        action = MENU_ACTIONS.get(key)
+        if not action:
+            return TurnResult(MENU, [f"phim {key} -> doc menu"])
+        self.pending_action = action
+        self.action_awaiting_confirmation = None
+        return TurnResult(ASK_FOR_PHONE_NUMBER, [f"phim {key} -> {action}, cho so dien thoai"])
+
+    def _run_pending_action(self, phone_number):
+        action, self.pending_action = self.pending_action, None
+        if needs_confirmation(action):
+            self.action_awaiting_confirmation = (action, phone_number)
+            return TurnResult(CONFIRMATION_QUESTIONS[action], [f"HOI XAC NHAN truoc khi {action}"])
+        return TurnResult(ACTIONS[action](phone_number), [f"TRA {action}({phone_number})"])
+
+    def _answer_confirmation(self, caller_sentence):
+        action, phone_number = self.action_awaiting_confirmation
+        self.action_awaiting_confirmation = None
+        if caller_consented(caller_sentence):
+            return TurnResult(ACTIONS[action](phone_number),
+                              [f"nguoi goi DONG Y -> TRA {action}({phone_number})"])
+        return TurnResult(CANCELLED, ["nguoi goi KHONG dong y"])
+
+    def _handle_goodbye(self, caller_sentence):
+        if find_topic_by_keyword(caller_sentence):
+            return None
+        finishing = says_any(caller_sentence, CLOSING) or (
+            self.last_reply in (ANYTHING_ELSE, CANCELLED) and says_any(caller_sentence, NOTHING_MORE))
+        if finishing:
+            return TurnResult(GOODBYE, ["nguoi goi chao -> chao lai roi cup"], hang_up=True)
+        if says_any(caller_sentence, THANKS):
+            return TurnResult(ANYTHING_ELSE, ["nguoi goi cam on -> hoi con can gi khong"])
+        return None
+
     def _handle_reluctance(self, caller_sentence):
         offered_staff = self.last_reply in (WHY_WE_NEED_THE_NUMBER, OFFER_STAFF)
-        if (offered_staff and wants_staff(caller_sentence)) or says_any(caller_sentence, ASKS_FOR_STAFF):
+        asks_for_staff = says_any(caller_sentence, ASKS_FOR_STAFF) \
+            and find_topic_by_keyword(caller_sentence) != IDENTITY_TOPIC
+        if (offered_staff and wants_staff(caller_sentence)) or asks_for_staff:
             return TurnResult(log=["nguoi goi muon gap nhan vien -> chuyen"], transfer=True)
-        just_asked_to_dial = any(self.last_reply in group for group in SAME_MEANING_SENTENCES
-                                 if ASK_FOR_PHONE_NUMBER in group)
-        if just_asked_to_dial and says_any(caller_sentence, RELUCTANT_TO_DIAL):
+        if self._just_asked_to_dial() and says_any(caller_sentence, RELUCTANT_TO_DIAL):
             return TurnResult(WHY_WE_NEED_THE_NUMBER, ["nguoi goi ngai bam so -> giai thich"])
         if says_any(caller_sentence, ANNOYED):
             return TurnResult(OFFER_STAFF, ["nguoi goi buc -> moi gap nhan vien"])
@@ -383,7 +479,12 @@ class Conversation:
         if self.action_awaiting_confirmation:
             return CONFIRMATION_QUESTIONS[self.action_awaiting_confirmation[0]]
         if not sentence:
-            return ASK_FOR_PHONE_NUMBER if TAG_ACTION in llm_sentence else DID_NOT_CATCH
+            if TAG_ACTION not in llm_sentence:
+                return DID_NOT_CATCH
+            self.pending_action = parse_action_name(llm_sentence)
+            if self.pending_action:
+                log.append(f"nho viec {self.pending_action}, cho so dien thoai")
+            return ASK_FOR_PHONE_NUMBER
         if ran_out_of_tokens:
             return self._rescue_unfinished(caller_sentence, sentence, log)
         if not contains_digit(sentence):
@@ -397,8 +498,7 @@ class Conversation:
         return OUT_OF_SCOPE
 
     def _prefer_document(self, caller_sentence, sentence, log):
-        asks_about_own_account = any(word in caller_sentence.lower() for word in OWN_ACCOUNT_WORDS)
-        if ASKS_TO_DIAL in sentence.lower() and asks_about_own_account:
+        if ASKS_TO_DIAL in sentence.lower() and asks_about_own_account(caller_sentence):
             return sentence
         topic = find_topic_by_keyword(caller_sentence)
         if not topic:

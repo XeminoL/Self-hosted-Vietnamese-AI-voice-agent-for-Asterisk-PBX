@@ -13,7 +13,7 @@
       "Dạ vay mua nhà thì lãi từ {lai_suat_vay_nha} phần trăm một năm, còn vay tiêu dùng từ {lai_suat_vay_tieu_dung} phần trăm ạ.",
       "Dạ bên em cho vay tiêu dùng lãi từ {lai_suat_vay_tieu_dung} phần trăm, vay nhà từ {lai_suat_vay_nha} phần trăm một năm ạ."
     ],
-    "keywords": ["lãi vay", "vay lãi", "lãi suất vay"]
+    "keywords": ["lãi vay", "vay lãi", "lãi suất vay", "vay mua nhà", "vay tiêu dùng", "vay thì lãi"]
   },
   "ty_gia_do": {
     "answers": [
@@ -37,7 +37,7 @@
       "Dạ chuyển cho người cùng ngân hàng thì không mất phí, chuyển sang ngân hàng khác mất bảy nghìn đồng một lần ạ.",
       "Dạ mỗi lần chuyển ra ngân hàng khác là bảy nghìn đồng, còn chuyển trong ngân hàng thì miễn phí ạ."
     ],
-    "keywords": ["phí chuyển", "chuyển tiền mất", "chuyển mất phí"]
+    "keywords": ["phí chuyển", "chuyển tiền mất phí", "chuyển mất phí", "mất phí"]
   },
   "cach_chuyen_tien": {
     "answers": [
@@ -45,7 +45,7 @@
       "Dạ nhanh nhất là chuyển trên ứng dụng ạ. Anh chị cũng có thể ra quầy hoặc gọi tổng đài.",
       "Dạ anh chị mở ứng dụng, chọn chuyển tiền là xong ạ. Nếu không tiện thì ra quầy hoặc gọi tổng đài cũng được."
     ],
-    "keywords": ["cách chuyển", "chuyển tiền thế nào", "chuyển sao"]
+    "keywords": ["cách chuyển", "chuyển tiền thế nào", "chuyển sao", "làm sao để chuyển", "chuyển tiền thì làm", "chuyển tiền làm sao", "muốn chuyển tiền"]
   },
   "gio_lam_viec": {
     "answers": [
@@ -61,7 +61,7 @@
       "Dạ mỗi ngày anh chị chuyển được tối đa hai mươi triệu, muốn nâng thì chỉnh trên ứng dụng ạ.",
       "Dạ mặc định là hai mươi triệu một ngày ạ. Anh chị vào ứng dụng để đổi hạn mức."
     ],
-    "keywords": ["hạn mức"]
+    "keywords": ["hạn mức", "tối đa", "mỗi ngày được chuyển"]
   },
   "the_bi_mat": {
     "answers": [
@@ -69,7 +69,7 @@
       "Dạ việc đầu tiên là khoá thẻ trên ứng dụng hoặc qua tổng đài ạ. Sau đó anh chị ra chi nhánh làm lại thẻ.",
       "Dạ anh chị khoá thẻ liền cho an toàn nhé, qua ứng dụng hay tổng đài đều được, rồi ghé chi nhánh làm thẻ mới ạ."
     ],
-    "keywords": ["mất thẻ", "thẻ mất", "rơi thẻ"]
+    "keywords": ["mất thẻ", "thẻ mất", "rơi thẻ", "bị mất", "làm mất"]
   },
   "quen_mat_khau": {
     "answers": [
@@ -93,7 +93,7 @@
       "Dạ năm đầu anh chị không mất phí thường niên, từ năm thứ hai là một trăm nghìn đồng một năm ạ.",
       "Dạ phí thường niên thẻ ghi nợ là một trăm nghìn đồng một năm, riêng năm đầu được miễn ạ."
     ],
-    "keywords": ["thường niên", "phí thẻ", "phí năm"]
+    "keywords": ["thường niên", "phí thẻ", "phí năm", "hằng năm", "hàng năm", "mỗi năm", "phí hằng năm"]
   },
   "rut_tien_atm": {
     "answers": [
@@ -125,7 +125,7 @@
       "Dạ anh chị để lại ít nhất năm mươi nghìn đồng trong tài khoản thanh toán ạ.",
       "Dạ số dư tối thiểu là năm mươi nghìn đồng ạ."
     ],
-    "keywords": ["tối thiểu", "duy trì"]
+    "keywords": ["tối thiểu", "duy trì", "số dư tối thiểu", "giữ tiền", "để trống", "để lại tối thiểu"]
   },
   "chi_nhanh_o_dau": {
     "answers": [
@@ -133,7 +133,7 @@
       "Dạ anh chị mở ứng dụng, mục chi nhánh sẽ chỉ chỗ gần nhất ạ. Bên em có ở các thành phố lớn.",
       "Dạ bên em có chi nhánh ở các thành phố lớn ạ. Trên ứng dụng có bản đồ chỉ chỗ gần anh chị nhất."
     ],
-    "keywords": ["chi nhánh", "ở đâu", "địa chỉ", "phòng giao dịch"]
+    "keywords": ["chi nhánh", "ở đâu", "địa chỉ", "phòng giao dịch", "có ở", "có chi nhánh"]
   },
   "gioi_thieu": {
     "answers": [
@@ -142,5 +142,13 @@
       "Dạ anh chị đang gọi tới ngân hàng An Tín, em tên Duyên, em nghe đây ạ."
     ],
     "keywords": ["ngân hàng gì", "ngân hàng nào", "tên ngân hàng", "ngân hàng của bạn", "ngân hàng của em", "bạn tên gì", "em tên gì", "bạn là ai", "em là ai"]
+  },
+  "tro_ly_tu_dong": {
+    "answers": [
+      "Dạ em là trợ lý tự động của ngân hàng An Tín ạ. Anh chị cần gặp nhân viên thì em chuyển máy ngay.",
+      "Dạ em là máy trả lời tự động ạ. Nếu anh chị muốn nói chuyện với nhân viên, em chuyển máy liền.",
+      "Dạ em không phải người thật, em là trợ lý tự động của An Tín ạ. Anh chị cần người thì em nối máy nhé."
+    ],
+    "keywords": ["người thật hay", "hay máy", "là máy", "người máy", "robot", "trí tuệ nhân tạo", "máy tự động"]
   }
 }

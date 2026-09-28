@@ -224,7 +224,8 @@ start_asterisk() {
     say ""
     say "${BOLD}Starting Asterisk${OFF}"
     if [ "$(docker inspect -f '{{.State.Running}}' "$CONTAINER" 2>/dev/null)" = true ]; then
-        ok "already running"
+        docker exec "$CONTAINER" asterisk -rx "core reload" >/dev/null 2>&1
+        ok "already running, configuration reloaded"
         return
     fi
     (cd "$PROJECT_DIR" && docker compose up -d >"$LOG_DIR/asterisk.log" 2>&1) \

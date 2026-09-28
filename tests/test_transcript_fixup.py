@@ -27,3 +27,8 @@ def test_leaves_already_correct_sentence_alone():
 def test_leaves_out_of_scope_sentence_alone():
     sentence = "tôi muốn biết đường tình duyên của tôi"
     assert fix_near_homophones(sentence) == sentence
+
+
+def test_bank_name_is_not_turned_into_limit():
+    sentence = "ngân hàng mua usd giá bao nhiêu"
+    assert fix_near_homophones(sentence) == sentence

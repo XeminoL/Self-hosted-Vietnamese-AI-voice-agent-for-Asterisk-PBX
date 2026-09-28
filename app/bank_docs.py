@@ -28,16 +28,19 @@ def available_topics():
 def find_topic_by_keyword(caller_sentence, skip=None):
     sentence = caller_sentence.lower()
     topics = _read_if_changed(TOPICS_FILE, "topics")
-    matches = [
-        (len(word), name)
+    scores = {
+        name: sum(len(word) for word in topic.get("keywords", ()) if word.lower() in sentence)
         for name, topic in topics.items()
         if name != skip
-        for word in topic.get("keywords", ())
-        if word.lower() in sentence
-    ]
-    if not matches:
-        return None
-    return max(matches)[1]
+    }
+    best = max(scores, key=scores.get, default=None)
+    return best if best and scores[best] else None
+
+
+def keywords_found(caller_sentence, name):
+    sentence = caller_sentence.lower()
+    topic = _read_if_changed(TOPICS_FILE, "topics").get(name, {})
+    return sorted((word for word in topic.get("keywords", ()) if word.lower() in sentence), key=len, reverse=True)
 
 
 def _fill_figures(sentence):

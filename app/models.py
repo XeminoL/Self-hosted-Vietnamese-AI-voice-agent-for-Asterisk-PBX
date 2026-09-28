@@ -42,11 +42,11 @@ class SpeechRecognizer:
 
 
 class SpeechSynthesizer:
-    def __init__(self):
+    def __init__(self, speaker=PIPER_SPEAKER):
         from piper import PiperVoice, SynthesisConfig
 
         self._voice = PiperVoice.load(PIPER_VOICE)
-        self._config = SynthesisConfig(speaker_id=PIPER_SPEAKER)
+        self._config = SynthesisConfig(speaker_id=speaker)
 
     def speak(self, sentence):
         import numpy

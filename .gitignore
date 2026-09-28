@@ -8,3 +8,4 @@ app/calls/
 tests/ket-qua-*.txt
 logs/
 ket-qua-*.txt
+tests/ket-qua-*.json

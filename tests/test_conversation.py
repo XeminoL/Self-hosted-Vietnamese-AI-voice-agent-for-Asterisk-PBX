@@ -320,3 +320,112 @@ def test_reluctance_words_mean_nothing_without_a_request_to_dial(monkeypatch):
 def test_having_no_phone_is_not_turned_into_phone_number():
     from transcript_fixup import fix_near_homophones
     assert fix_near_homophones("tôi không có điện thoại") == "tôi không có điện thoại"
+
+
+def test_saying_goodbye_ends_the_call(monkeypatch):
+    _, results = _talk(monkeypatch, ["@DOC gia_vang"], ["giá vàng", "vậy thôi, tạm biệt em"])
+    assert results[1].reply == conv.GOODBYE
+    assert results[1].hang_up
+
+
+def test_thanks_asks_if_anything_else_then_no_ends_the_call(monkeypatch):
+    _, results = _talk(monkeypatch, ["@DOC gia_vang"], ["giá vàng", "cảm ơn em", "không"])
+    assert results[1].reply == conv.ANYTHING_ELSE and not results[1].hang_up
+    assert results[2].hang_up
+
+
+def test_thanks_with_a_new_question_keeps_going(monkeypatch):
+    _, results = _talk(monkeypatch, ["@DOC gia_vang", "@DOC ty_gia_do"],
+                       ["giá vàng", "cảm ơn, còn đô la thì sao"])
+    assert not results[1].hang_up
+    assert "đô" in results[1].reply
+
+
+def test_no_after_anything_else_with_a_question_is_not_goodbye(monkeypatch):
+    _, results = _talk(monkeypatch, ["@DOC gia_vang", "@DOC phi_thuong_nien"],
+                       ["giá vàng", "cảm ơn", "không, cho hỏi phí thường niên"])
+    assert not results[2].hang_up
+
+
+def test_menu_key_asks_for_the_number_then_runs_that_action():
+    conversation = conv.Conversation()
+    assert conversation.respond("", "", "3").reply == conv.ASK_FOR_PHONE_NUMBER
+    assert conversation.expects_number()
+    reply = conversation.respond("", "0901234567").reply
+    assert "hạn mức" in reply and "20 triệu" in reply
+    assert not conversation.expects_number()
+
+
+def test_menu_card_lock_asks_to_confirm_then_locks(monkeypatch):
+    import copy
+    import bank_data
+    monkeypatch.setattr(bank_data, "CUSTOMERS", copy.deepcopy(bank_data.CUSTOMERS))
+    bank_data.CUSTOMERS["0987654321"]["trang_thai_the"] = "đang hoạt động"
+    conversation = conv.Conversation()
+    conversation.respond("", "", "4")
+    assert conversation.respond("", "0987654321").reply == conv.CONFIRMATION_QUESTIONS["khoa_the"]
+    assert "thành công" in conversation.respond("đúng rồi", "").reply
+
+
+def test_refusing_the_confirmation_cancels_without_the_model(monkeypatch):
+    monkeypatch.setattr(conv, "ask_llm", None)
+    conversation = conv.Conversation()
+    conversation.respond("", "", "4")
+    conversation.respond("", "0987654321")
+    assert conversation.respond("thôi không khoá nữa", "").reply == conv.CANCELLED
+    assert conversation.respond("không", "").hang_up
+
+
+def test_key_zero_goes_to_staff_and_unknown_key_reads_the_menu():
+    conversation = conv.Conversation()
+    assert conversation.respond("", "", "0").transfer
+    assert conversation.respond("", "", "9").reply == conv.MENU
+
+
+def test_clear_topic_question_skips_the_model(monkeypatch):
+    monkeypatch.setattr(conv, "ask_llm", None)
+    conversation = conv.Conversation()
+    assert conversation.respond("lãi suất tiết kiệm bao nhiêu", "").reply in topic_phrasings("lai_suat_tiet_kiem")
+    assert conversation.history[-1]["content"] == "@DOC lai_suat_tiet_kiem"
+
+
+def test_own_account_question_still_asks_the_model(monkeypatch):
+    _, results = _talk(monkeypatch, ["@TRA tra_han_muc"], ["hạn mức thẻ của tôi bao nhiêu"])
+    assert results[0].reply == conv.ASK_FOR_PHONE_NUMBER
+
+
+def test_action_named_before_the_number_runs_without_asking_the_model_again(monkeypatch):
+    conversation, results = _talk(monkeypatch, ["@TRA tra_han_muc"], ["hạn mức thẻ của tôi bao nhiêu"])
+    monkeypatch.setattr(conv, "ask_llm", None)
+    reply = conversation.respond("", "0901234567").reply
+    assert "hạn mức" in reply and "20 triệu" in reply
+
+
+def test_card_lock_named_by_voice_still_asks_to_confirm(monkeypatch):
+    conversation, _ = _talk(monkeypatch, ["@TRA khoa_the"], ["tôi muốn khoá thẻ của tôi"])
+    monkeypatch.setattr(conv, "ask_llm", None)
+    assert conversation.respond("", "0901234567").reply == conv.CONFIRMATION_QUESTIONS["khoa_the"]
+
+
+def test_pending_action_is_forgotten_when_the_caller_moves_on(monkeypatch):
+    conversation, _ = _talk(monkeypatch, ["@TRA tra_so_du"], ["số dư của tôi bao nhiêu", "giá vàng hôm nay"])
+    assert conversation.pending_action is None
+    assert not conversation.expects_number()
+
+
+def test_minimum_balance_is_general_info_not_the_callers_balance(monkeypatch):
+    monkeypatch.setattr(conv, "ask_llm", None)
+    reply = conv.Conversation().respond("số dư tối thiểu là bao nhiêu", "").reply
+    assert reply in topic_phrasings("so_du_toi_thieu")
+
+
+def test_asking_if_it_is_a_machine_gets_an_honest_answer_not_a_transfer(monkeypatch):
+    monkeypatch.setattr(conv, "ask_llm", None)
+    result = conv.Conversation().respond("em là người thật hay máy", "")
+    assert not result.transfer
+    assert result.reply in topic_phrasings("tro_ly_tu_dong")
+
+
+def test_asking_for_a_real_person_still_transfers(monkeypatch):
+    monkeypatch.setattr(conv, "ask_llm", None)
+    assert conv.Conversation().respond("tôi muốn nói chuyện với người thật", "").transfer
