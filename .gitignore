@@ -2,8 +2,9 @@ __pycache__/
 *.pyc
 .venv/
 app/calls/
-app/voice-library/
 *.wav
 *.sln
 .pytest_cache/
 tests/ket-qua-*.txt
+logs/
+ket-qua-*.txt

@@ -1,4 +1,5 @@
 import struct
+import threading
 import uuid
 
 TYPE_HANGUP = 0x00
@@ -29,6 +30,7 @@ class AudioSocketConnection:
     def __init__(self, reader, writer):
         self._reader = reader
         self._writer = writer
+        self._write_lock = threading.Lock()
         self.call_id = None
 
     def _read_exactly(self, byte_count):
@@ -55,9 +57,12 @@ class AudioSocketConnection:
         return frame_type, payload
 
     def send_audio(self, payload):
-        self._writer.write(build_frame(TYPE_AUDIO, payload))
-        self._writer.flush()
+        self._send(build_frame(TYPE_AUDIO, payload))
 
     def send_hangup(self):
-        self._writer.write(build_frame(TYPE_HANGUP))
-        self._writer.flush()
+        self._send(build_frame(TYPE_HANGUP))
+
+    def _send(self, frame):
+        with self._write_lock:
+            self._writer.write(frame)
+            self._writer.flush()

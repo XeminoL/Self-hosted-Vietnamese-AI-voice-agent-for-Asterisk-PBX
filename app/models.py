@@ -1,15 +1,12 @@
 import os
-import subprocess
-import threading
 
-APP_DIR = os.path.dirname(os.path.abspath(__file__))
 GIPFORMER_DIR = os.path.expanduser("~/gipformer")
-PIPER_BIN = os.path.expanduser("~/piper/piper/piper")
-PIPER_VOICE = os.path.expanduser("~/piper/vi_VN-vais1000-medium.onnx")
+PIPER_VOICE = os.path.expanduser("~/piper/cake/vi_VN-csa-voice-piper-v3-medium.onnx")
+PIPER_SPEAKER = 0
 
 SAMPLE_RATE = 8000
-RECOGNIZER_THREADS = 4
-LIBRARY_VOICE = "Mỹ Duyên"
+RECOGNIZER_SAMPLE_RATE = 16000
+RECOGNIZER_THREADS = 2
 MIN_SECONDS_TO_RECOGNIZE = 1.0
 
 
@@ -28,12 +25,14 @@ class SpeechRecognizer:
 
     def transcribe(self, audio_bytes):
         import numpy
+        import soxr
 
         if len(audio_bytes) < SAMPLE_RATE * 2 * MIN_SECONDS_TO_RECOGNIZE:
             return ""
-        samples = numpy.frombuffer(audio_bytes, dtype=numpy.int16)
+        samples = numpy.frombuffer(audio_bytes, dtype=numpy.int16).astype(numpy.float32) / 32768.0
         stream = self._model.create_stream()
-        stream.accept_waveform(SAMPLE_RATE, samples.astype(numpy.float32) / 32768.0)
+        stream.accept_waveform(RECOGNIZER_SAMPLE_RATE,
+                               soxr.resample(samples, SAMPLE_RATE, RECOGNIZER_SAMPLE_RATE))
         try:
             self._model.decode_stream(stream)
         except RuntimeError as error:
@@ -44,35 +43,17 @@ class SpeechRecognizer:
 
 class SpeechSynthesizer:
     def __init__(self):
-        from vieneu import Vieneu
+        from piper import PiperVoice, SynthesisConfig
 
-        self._vieneu = Vieneu()
+        self._voice = PiperVoice.load(PIPER_VOICE)
+        self._config = SynthesisConfig(speaker_id=PIPER_SPEAKER)
 
-    def fast(self, sentence):
-        wav_path = f"/tmp/piper-{os.getpid()}-{threading.get_ident()}.wav"
-        subprocess.run([PIPER_BIN, "-m", PIPER_VOICE, "-f", wav_path],
-                       input=sentence.encode("utf-8"), check=True, capture_output=True)
-        return _convert_to_sln_and_read(wav_path)
+    def speak(self, sentence):
+        import numpy
+        import soxr
 
-    def polished(self, sentence, sln_path):
-        wav_path = f"/tmp/vieneu-{os.path.basename(sln_path)}.wav"
-        self._vieneu.save(self._vieneu.infer(sentence, voice=LIBRARY_VOICE), wav_path)
-        _convert_to_sln(wav_path, sln_path)
-
-
-def _convert_to_sln(wav_path, sln_path):
-    subprocess.run(
-        ["sox", wav_path, "-r", str(SAMPLE_RATE), "-c", "1", "-b", "16",
-         "-e", "signed-integer", "-t", "raw", sln_path],
-        check=True, capture_output=True,
-    )
-    os.remove(wav_path)
-
-
-def _convert_to_sln_and_read(wav_path):
-    sln_path = wav_path.replace(".wav", ".sln")
-    _convert_to_sln(wav_path, sln_path)
-    with open(sln_path, "rb") as f:
-        audio_bytes = f.read()
-    os.remove(sln_path)
-    return audio_bytes
+        audio = b"".join(chunk.audio_int16_bytes
+                         for chunk in self._voice.synthesize(sentence, syn_config=self._config))
+        samples = numpy.frombuffer(audio, dtype=numpy.int16).astype(numpy.float32) / 32768.0
+        phone = soxr.resample(samples, self._voice.config.sample_rate, SAMPLE_RATE)
+        return (numpy.clip(phone, -1.0, 1.0) * 32767).astype("<i2").tobytes()

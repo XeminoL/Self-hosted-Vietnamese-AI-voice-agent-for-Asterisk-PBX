@@ -3,7 +3,7 @@ set -uo pipefail
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LLAMA_BIN="$HOME/llamacpp/llama-b10738/llama-server"
-MODEL_REPO="unsloth/Qwen3-4B-Instruct-2507-GGUF:Q4_K_M"
+MODEL_REPO="ggml-org/gemma-4-E2B-it-GGUF:Q4_0"
 LLM_HOST=127.0.0.1
 LLM_PORT=8080
 AUDIOSOCKET_PORT=9092
@@ -12,7 +12,19 @@ CONTAINER=tongdai
 LLM_THREADS=4
 LLM_CONTEXT=2048
 LLM_READY_TIMEOUT=180
+LLM_CACHE_REUSE=8
+LLM_SLOTS=1
+PIPER_VOICE="piper/cake/vi_VN-csa-voice-piper-v3-medium.onnx"
+PIPER_VOICE_URL="https://huggingface.co/CakeByVPBank/piper-pgl-v4-vi_VN-version39_epoch39/resolve/main/vi_VN-csa-voice-piper-v3-medium.onnx"
 LOG_DIR="$PROJECT_DIR/logs"
+WINDOWS_LLAMA_BIN="llamacpp/vulkan/llama-b11212/llama-server.exe"
+WINDOWS_MODEL="llamacpp/models/gemma-4-E2B-it-Q4_0.gguf"
+WINDOWS_LLM_PORT=8085
+WINDOWS_PROMPT_CACHE="llamacpp/cache"
+PROMPT_CACHE="$HOME/.cache/tongdai-prompts"
+WINDOWS_DEVICE=none
+LLM_PRIORITY=0
+BRIDGE_TUNNEL_PORT=8081
 
 RED=$'\033[31m'; GREEN=$'\033[32m'; YELLOW=$'\033[33m'; BOLD=$'\033[1m'; OFF=$'\033[0m'
 
@@ -49,6 +61,27 @@ describe_port_user() {
     fi
 }
 
+windows_home() {
+    command -v cmd.exe >/dev/null || return 1
+    wslpath "$(cmd.exe /c 'echo %USERPROFILE%' 2>/dev/null | tr -d '\r')" 2>/dev/null
+}
+
+windows_llm_available() {
+    local home
+    home="$(windows_home)" || return 1
+    [ -f "$home/$WINDOWS_LLAMA_BIN" ] && [ -f "$home/$WINDOWS_MODEL" ] && command -v python.exe >/dev/null
+}
+
+windows_leftovers() {
+    command -v powershell.exe >/dev/null || return 0
+    powershell.exe -NoProfile -Command "
+        \$found = Get-CimInstance Win32_Process | Where-Object {
+            (\$_.Name -eq 'llama-server.exe' -and \$_.CommandLine -like '*--port $WINDOWS_LLM_PORT*') -or
+            (\$_.Name -eq 'python.exe' -and \$_.CommandLine -like '*llm_bridge.py*windows*') }
+        \$found | ForEach-Object { Stop-Process -Id \$_.ProcessId -Force -ErrorAction SilentlyContinue }
+        @(\$found).Count" 2>/dev/null | tr -d '\r'
+}
+
 wait_for_llm() {
     local waited=0
     while [ "$waited" -lt "$LLM_READY_TIMEOUT" ]; do
@@ -83,7 +116,14 @@ shut_down() {
     printf '\n'
     say "${BOLD}Shutting down${OFF}"
     [ -n "${SWITCHBOARD_PID:-}" ] && stop_quietly "$SWITCHBOARD_PID" "switchboard"
+    [ -n "${BRIDGE_PID:-}" ] && stop_quietly "$BRIDGE_PID" "bridge in WSL"
+    [ -n "${WINDOWS_BRIDGE_PID:-}" ] && stop_quietly "$WINDOWS_BRIDGE_PID" "bridge on Windows"
     [ -n "${LLAMA_PID:-}" ] && stop_quietly "$LLAMA_PID" "llama-server"
+    if [ -n "${WINDOWS_BRIDGE_PID:-}" ]; then
+        local killed
+        killed="$(windows_leftovers)"
+        [ "${killed:-0}" -gt 0 ] && ok "stopped $killed model processes left on Windows"
+    fi
     if [ "${STARTED_ASTERISK:-no}" = yes ]; then
         (cd "$PROJECT_DIR" && docker compose down >/dev/null 2>&1) && ok "Asterisk stopped"
     else
@@ -94,22 +134,26 @@ shut_down() {
 
 check_requirements() {
     say "${BOLD}Checking what the switchboard needs${OFF}"
-    [ -x "$LLAMA_BIN" ] || die "llama-server not found at $LLAMA_BIN"
-    ok "llama-server"
+    if windows_llm_available; then
+        ok "llama-server on Windows, the model runs on the CPU and leaves the Intel GPU to the screen"
+    else
+        [ -x "$LLAMA_BIN" ] || die "llama-server not found at $LLAMA_BIN"
+        warn "no Vulkan llama-server on Windows, the model runs on the CPU and the first turn is slow"
+    fi
 
     [ -x "$PROJECT_DIR/.venv/bin/python" ] || die "python venv missing, run: python3 -m venv .venv && .venv/bin/pip install -r requirements.txt"
-    "$PROJECT_DIR/.venv/bin/python" -c 'import sherpa_onnx, vieneu, webrtcvad, numpy' 2>/dev/null \
+    "$PROJECT_DIR/.venv/bin/python" -c 'import sherpa_onnx, piper, soxr, webrtcvad, numpy' 2>/dev/null \
         || die "python packages missing, run: .venv/bin/pip install -r requirements.txt"
     ok "python packages"
 
-    for tool in sox docker curl; do
+    for tool in docker curl; do
         command -v "$tool" >/dev/null || die "$tool not installed, run: sudo apt install $tool"
     done
-    ok "sox, docker, curl"
+    ok "docker, curl"
 
-    [ -x "$HOME/piper/piper/piper" ] || die "piper not found at ~/piper/piper/piper"
-    [ -f "$HOME/piper/vi_VN-vais1000-medium.onnx" ] || die "piper voice not found at ~/piper/"
-    ok "piper and its Vietnamese voice"
+    [ -f "$HOME/$PIPER_VOICE" ] || die "Piper voice not found at ~/$PIPER_VOICE, run:
+    mkdir -p ~/piper/cake && curl -L -o ~/$PIPER_VOICE $PIPER_VOICE_URL && curl -L -o ~/$PIPER_VOICE.json $PIPER_VOICE_URL.json"
+    ok "Piper voice"
 
     for part in encoder decoder joiner; do
         [ -f "$HOME/gipformer/$part.int8.onnx" ] || die "gipformer $part.int8.onnx not found in ~/gipformer/"
@@ -121,8 +165,14 @@ check_requirements() {
 }
 
 clear_previous_run() {
-    local stale
-    stale=$(pgrep -f 'switchboard\.py' 2>/dev/null; pgrep -f 'llama-server' 2>/dev/null)
+    local stale windows_stale
+    if windows_llm_available; then
+        windows_stale="$(windows_leftovers)"
+        [ "${windows_stale:-0}" -gt 0 ] \
+            && warn "stopped $windows_stale model processes an earlier run left on Windows"
+    fi
+    stale=$(pgrep -f 'switchboard\.py' 2>/dev/null; pgrep -f 'llama-server' 2>/dev/null
+            pgrep -f 'llm_bridge\.py' 2>/dev/null)
     [ -z "$stale" ] && return
 
     warn "an earlier run left processes behind, probably from closing the window with X"
@@ -154,6 +204,11 @@ free_the_ports() {
     fi
     ok "port $LLM_PORT free for the language model"
 
+    if windows_llm_available && port_taken "$BRIDGE_TUNNEL_PORT"; then
+        printf '%s\n' "${RED}Port $BRIDGE_TUNNEL_PORT is taken${OFF} by $(describe_port_user "$BRIDGE_TUNNEL_PORT"), and the bridge to Windows needs it."
+        exit 1
+    fi
+
     if port_taken "$AUDIOSOCKET_PORT"; then
         printf '%s\n' "${RED}Port $AUDIOSOCKET_PORT is taken${OFF} by $(describe_port_user "$AUDIOSOCKET_PORT"). Another copy of the switchboard is probably still running."
         exit 1
@@ -178,12 +233,36 @@ start_asterisk() {
     ok "container $CONTAINER is up, softphones can register on port $SIP_PORT"
 }
 
+start_llm_on_windows() {
+    local home
+    home="$(windows_home)"
+    mkdir -p "$home/$WINDOWS_PROMPT_CACHE"
+    "$home/$WINDOWS_LLAMA_BIN" -m "$(wslpath -w "$home/$WINDOWS_MODEL")" -c "$LLM_CONTEXT" \
+        -dev "$WINDOWS_DEVICE" -np "$LLM_SLOTS" --swa-full -t "$LLM_THREADS" --prio "$LLM_PRIORITY" --poll 0 --cache-reuse "$LLM_CACHE_REUSE" \
+        --slot-save-path "$(wslpath -w "$home/$WINDOWS_PROMPT_CACHE")" --host 127.0.0.1 --port "$WINDOWS_LLM_PORT" >"$LOG_DIR/llama.log" 2>&1 &
+    LLAMA_PID=$!
+    python3 "$PROJECT_DIR/app/llm_bridge.py" wsl >"$LOG_DIR/bridge.log" 2>&1 &
+    BRIDGE_PID=$!
+    python.exe "$(wslpath -w "$PROJECT_DIR/app/llm_bridge.py")" windows >>"$LOG_DIR/bridge.log" 2>&1 &
+    WINDOWS_BRIDGE_PID=$!
+}
+
+start_llm_on_cpu() {
+    mkdir -p "$PROMPT_CACHE"
+    "$LLAMA_BIN" -hf "$MODEL_REPO" -c "$LLM_CONTEXT" -np "$LLM_SLOTS" --swa-full -t "$LLM_THREADS" \
+        --cache-reuse "$LLM_CACHE_REUSE" --slot-save-path "$PROMPT_CACHE" --host "$LLM_HOST" --port "$LLM_PORT" >"$LOG_DIR/llama.log" 2>&1 &
+    LLAMA_PID=$!
+}
+
 start_llm() {
     say ""
-    say "${BOLD}Starting the language model${OFF} (first run downloads about 2.5 GB)"
-    "$LLAMA_BIN" -hf "$MODEL_REPO" -c "$LLM_CONTEXT" -t "$LLM_THREADS" \
-        --host "$LLM_HOST" --port "$LLM_PORT" >"$LOG_DIR/llama.log" 2>&1 &
-    LLAMA_PID=$!
+    if windows_llm_available; then
+        say "${BOLD}Starting the language model on Windows${OFF}"
+        start_llm_on_windows
+    else
+        say "${BOLD}Starting the language model on the CPU${OFF} (first run downloads about 2.5 GB)"
+        start_llm_on_cpu
+    fi
     wait_for_llm || die "the language model did not come up, see logs/llama.log"
     printf '\r'
     ok "answering on $LLM_HOST:$LLM_PORT"

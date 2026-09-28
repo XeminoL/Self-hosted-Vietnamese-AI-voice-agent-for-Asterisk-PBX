@@ -4,6 +4,7 @@ BANKING_TERMS = (
     "số dư", "tài khoản", "hạn mức", "giao dịch", "chuyển khoản",
     "số điện thoại", "nhân viên",
 )
+REAL_PHRASES_THAT_LOOK_MISHEARD = ("có điện thoại",)
 MAX_EDIT_DISTANCE = 2
 
 
@@ -34,7 +35,7 @@ def fix_near_homophones(sentence):
         term_length = len(term.split())
         for position in range(len(words) - term_length + 1):
             span = " ".join(words[position:position + term_length])
-            if span.lower() == term:
+            if span.lower() == term or span.lower() in REAL_PHRASES_THAT_LOOK_MISHEARD:
                 continue
             if _edit_distance(_strip_accents(span), _strip_accents(term)) <= MAX_EDIT_DISTANCE:
                 words[position:position + term_length] = term.split()

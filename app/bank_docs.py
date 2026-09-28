@@ -6,26 +6,7 @@ TOPICS_FILE = os.path.join(DOCS_DIR, "topics.json")
 FIGURES_FILE = os.path.join(DOCS_DIR, "figures.json")
 
 _cache = {"topics": {}, "figures": {}, "mtime": {}}
-
-KEYWORDS = {
-    "lai_suat_tiet_kiem": ("tiết kiệm", "gửi tiền", "gởi tiền", "lãi tiết kiệm"),
-    "lai_suat_vay": ("lãi vay", "vay lãi", "lãi suất vay"),
-    "ty_gia_do": ("đô", "đô la", "usd", "tỷ giá", "ngoại tệ"),
-    "gia_vang": ("vàng", "sjc", "lượng vàng"),
-    "phi_chuyen_tien": ("phí chuyển", "chuyển tiền mất", "chuyển mất phí"),
-    "cach_chuyen_tien": ("cách chuyển", "chuyển tiền thế nào", "chuyển sao"),
-    "thoi_gian_chuyen_tien": ("bao lâu", "mấy phút", "chuyển lâu"),
-    "gio_lam_viec": ("mấy giờ", "giờ làm", "mở cửa", "đóng cửa"),
-    "chi_nhanh_o_dau": ("chi nhánh", "ở đâu", "địa chỉ", "phòng giao dịch"),
-    "han_muc_mac_dinh": ("hạn mức",),
-    "the_bi_mat": ("mất thẻ", "thẻ mất", "rơi thẻ"),
-    "quen_mat_khau": ("quên mật khẩu", "mật khẩu", "đăng nhập"),
-    "mo_tai_khoan": ("mở tài khoản", "mở thẻ", "làm thẻ"),
-    "phi_thuong_nien": ("thường niên", "phí thẻ", "phí năm"),
-    "rut_tien_atm": ("rút tiền", "atm", "cây rút"),
-    "vay_can_gi": ("vay cần", "vay tiền", "thủ tục vay", "hồ sơ vay"),
-    "so_du_toi_thieu": ("tối thiểu", "duy trì"),
-}
+_next_phrasing = {}
 
 
 def _read_if_changed(path, key):
@@ -37,7 +18,6 @@ def _read_if_changed(path, key):
     with open(path, encoding="utf-8") as f:
         _cache[key] = json.load(f)
     _cache["mtime"][key] = mtime
-    print(f"  (doc lai {os.path.basename(path)}: {len(_cache[key])} muc)")
     return _cache[key]
 
 
@@ -45,26 +25,39 @@ def available_topics():
     return list(_read_if_changed(TOPICS_FILE, "topics").keys())
 
 
-def find_topic_by_keyword(caller_sentence):
+def find_topic_by_keyword(caller_sentence, skip=None):
     sentence = caller_sentence.lower()
-    available = available_topics()
+    topics = _read_if_changed(TOPICS_FILE, "topics")
     matches = [
-        (len(word), topic)
-        for topic, words in KEYWORDS.items()
-        for word in words
-        if word in sentence and topic in available
+        (len(word), name)
+        for name, topic in topics.items()
+        if name != skip
+        for word in topic.get("keywords", ())
+        if word.lower() in sentence
     ]
     if not matches:
         return None
     return max(matches)[1]
 
 
-def read_topic(topic):
-    topics = _read_if_changed(TOPICS_FILE, "topics")
-    if topic not in topics:
-        return None
+def _fill_figures(sentence):
     figures = _read_if_changed(FIGURES_FILE, "figures")
-    sentence = topics[topic]
-    for name, value in figures.items():
-        sentence = sentence.replace("{" + name + "}", str(value))
+    for figure, value in figures.items():
+        sentence = sentence.replace("{" + figure + "}", str(value))
     return sentence
+
+
+def topic_phrasings(name):
+    topics = _read_if_changed(TOPICS_FILE, "topics")
+    if name not in topics:
+        return []
+    return [_fill_figures(sentence) for sentence in topics[name]["answers"]]
+
+
+def read_topic(name):
+    phrasings = topic_phrasings(name)
+    if not phrasings:
+        return None
+    turn = _next_phrasing.get(name, 0) % len(phrasings)
+    _next_phrasing[name] = turn + 1
+    return phrasings[turn]

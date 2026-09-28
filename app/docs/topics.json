@@ -1,19 +1,146 @@
 {
-  "lai_suat_tiet_kiem": "Dạ lãi suất tiết kiệm sáu tháng là {lai_suat_6thang} phần trăm một năm, mười hai tháng là {lai_suat_12thang} phần trăm ạ.",
-  "lai_suat_vay": "Dạ lãi suất vay tiêu dùng từ {lai_suat_vay_tieu_dung} phần trăm một năm, vay mua nhà từ {lai_suat_vay_nha} phần trăm ạ.",
-  "ty_gia_do": "Dạ tỷ giá đô la hôm nay mua {ty_gia_do_mua}, bán {ty_gia_do_ban} đồng ạ.",
-  "gia_vang": "Dạ giá vàng hôm nay mua {gia_vang_mua}, bán {gia_vang_ban} triệu một lượng ạ.",
-  "phi_chuyen_tien": "Dạ chuyển trong ngân hàng miễn phí, chuyển ngoài ngân hàng bảy nghìn đồng một lần ạ.",
-  "cach_chuyen_tien": "Dạ anh chị chuyển được trên ứng dụng, tại quầy, hoặc gọi tổng đài ạ. Trên ứng dụng là nhanh nhất.",
-  "gio_lam_viec": "Dạ chi nhánh mở từ tám giờ đến mười sáu giờ ba mươi, thứ hai đến thứ sáu ạ. Tổng đài thì hai mươi bốn trên bảy.",
-  "han_muc_mac_dinh": "Dạ hạn mức chuyển tiền mặc định là hai mươi triệu một ngày, anh chị đổi được trên ứng dụng ạ.",
-  "the_bi_mat": "Dạ anh chị khoá thẻ ngay qua tổng đài hoặc ứng dụng, rồi ra chi nhánh làm thẻ mới ạ.",
-  "quen_mat_khau": "Dạ anh chị chọn quên mật khẩu trên ứng dụng, hệ thống gửi mã về số điện thoại đăng ký ạ.",
-  "mo_tai_khoan": "Dạ anh chị mở tài khoản trên ứng dụng bằng căn cước, hoặc ra chi nhánh, mất khoảng mười lăm phút ạ.",
-  "phi_thuong_nien": "Dạ thẻ ghi nợ miễn phí thường niên năm đầu, từ năm sau là một trăm nghìn đồng ạ.",
-  "rut_tien_atm": "Dạ rút tại máy của ngân hàng thì miễn phí, máy ngân hàng khác là ba nghìn đồng một lần ạ.",
-  "thoi_gian_chuyen_tien": "Dạ chuyển trong ngân hàng là tức thì, chuyển ngoài thì trong vài phút, ngoài giờ làm việc có thể lâu hơn ạ.",
-  "vay_can_gi": "Dạ vay cần căn cước, giấy tờ thu nhập, và sao kê ba tháng gần nhất ạ.",
-  "so_du_toi_thieu": "Dạ tài khoản thanh toán cần giữ tối thiểu năm mươi nghìn đồng ạ.",
-  "chi_nhanh_o_dau": "Dạ ngân hàng có chi nhánh ở các thành phố lớn, anh chị xem địa chỉ gần nhất trên ứng dụng ạ."
+  "lai_suat_tiet_kiem": {
+    "answers": [
+      "Dạ lãi suất tiết kiệm sáu tháng là {lai_suat_6thang} phần trăm một năm, mười hai tháng là {lai_suat_12thang} phần trăm ạ.",
+      "Dạ gửi sáu tháng thì được {lai_suat_6thang} phần trăm một năm, còn gửi mười hai tháng được {lai_suat_12thang} phần trăm ạ.",
+      "Dạ hiện tại kỳ hạn mười hai tháng là {lai_suat_12thang} phần trăm, kỳ hạn sáu tháng là {lai_suat_6thang} phần trăm một năm ạ."
+    ],
+    "keywords": ["tiết kiệm", "gửi tiền", "gởi tiền", "lãi tiết kiệm"]
+  },
+  "lai_suat_vay": {
+    "answers": [
+      "Dạ lãi suất vay tiêu dùng từ {lai_suat_vay_tieu_dung} phần trăm một năm, vay mua nhà từ {lai_suat_vay_nha} phần trăm ạ.",
+      "Dạ vay mua nhà thì lãi từ {lai_suat_vay_nha} phần trăm một năm, còn vay tiêu dùng từ {lai_suat_vay_tieu_dung} phần trăm ạ.",
+      "Dạ bên em cho vay tiêu dùng lãi từ {lai_suat_vay_tieu_dung} phần trăm, vay nhà từ {lai_suat_vay_nha} phần trăm một năm ạ."
+    ],
+    "keywords": ["lãi vay", "vay lãi", "lãi suất vay"]
+  },
+  "ty_gia_do": {
+    "answers": [
+      "Dạ tỷ giá đô la hôm nay mua {ty_gia_do_mua}, bán {ty_gia_do_ban} đồng ạ.",
+      "Dạ hôm nay ngân hàng mua đô la giá {ty_gia_do_mua}, bán ra {ty_gia_do_ban} đồng ạ.",
+      "Dạ một đô la hôm nay bên em mua vào {ty_gia_do_mua} đồng, bán ra {ty_gia_do_ban} đồng ạ."
+    ],
+    "keywords": ["đô", "đô la", "usd", "tỷ giá", "ngoại tệ"]
+  },
+  "gia_vang": {
+    "answers": [
+      "Dạ giá vàng hôm nay mua {gia_vang_mua}, bán {gia_vang_ban} triệu một lượng ạ.",
+      "Dạ hôm nay vàng mua vào {gia_vang_mua} triệu, bán ra {gia_vang_ban} triệu một lượng ạ.",
+      "Dạ mỗi lượng vàng hôm nay bên em mua {gia_vang_mua} triệu, bán {gia_vang_ban} triệu ạ."
+    ],
+    "keywords": ["vàng", "sjc", "lượng vàng"]
+  },
+  "phi_chuyen_tien": {
+    "answers": [
+      "Dạ chuyển trong ngân hàng miễn phí, chuyển ngoài ngân hàng bảy nghìn đồng một lần ạ.",
+      "Dạ chuyển cho người cùng ngân hàng thì không mất phí, chuyển sang ngân hàng khác mất bảy nghìn đồng một lần ạ.",
+      "Dạ mỗi lần chuyển ra ngân hàng khác là bảy nghìn đồng, còn chuyển trong ngân hàng thì miễn phí ạ."
+    ],
+    "keywords": ["phí chuyển", "chuyển tiền mất", "chuyển mất phí"]
+  },
+  "cach_chuyen_tien": {
+    "answers": [
+      "Dạ anh chị chuyển được trên ứng dụng, tại quầy, hoặc gọi tổng đài ạ. Trên ứng dụng là nhanh nhất.",
+      "Dạ nhanh nhất là chuyển trên ứng dụng ạ. Anh chị cũng có thể ra quầy hoặc gọi tổng đài.",
+      "Dạ anh chị mở ứng dụng, chọn chuyển tiền là xong ạ. Nếu không tiện thì ra quầy hoặc gọi tổng đài cũng được."
+    ],
+    "keywords": ["cách chuyển", "chuyển tiền thế nào", "chuyển sao"]
+  },
+  "gio_lam_viec": {
+    "answers": [
+      "Dạ chi nhánh mở từ tám giờ đến mười sáu giờ ba mươi, thứ hai đến thứ sáu ạ. Tổng đài thì hai mươi bốn trên bảy.",
+      "Dạ từ thứ hai đến thứ sáu, chi nhánh làm việc từ tám giờ tới mười sáu giờ ba mươi ạ. Tổng đài thì trực cả ngày lẫn đêm.",
+      "Dạ tổng đài trực hai mươi bốn trên bảy ạ. Còn chi nhánh mở tám giờ, đóng mười sáu giờ ba mươi, thứ hai tới thứ sáu."
+    ],
+    "keywords": ["mấy giờ", "giờ làm", "mở cửa", "đóng cửa"]
+  },
+  "han_muc_mac_dinh": {
+    "answers": [
+      "Dạ hạn mức chuyển tiền mặc định là hai mươi triệu một ngày, anh chị đổi được trên ứng dụng ạ.",
+      "Dạ mỗi ngày anh chị chuyển được tối đa hai mươi triệu, muốn nâng thì chỉnh trên ứng dụng ạ.",
+      "Dạ mặc định là hai mươi triệu một ngày ạ. Anh chị vào ứng dụng để đổi hạn mức."
+    ],
+    "keywords": ["hạn mức"]
+  },
+  "the_bi_mat": {
+    "answers": [
+      "Dạ anh chị khoá thẻ ngay qua tổng đài hoặc ứng dụng, rồi ra chi nhánh làm thẻ mới ạ.",
+      "Dạ việc đầu tiên là khoá thẻ trên ứng dụng hoặc qua tổng đài ạ. Sau đó anh chị ra chi nhánh làm lại thẻ.",
+      "Dạ anh chị khoá thẻ liền cho an toàn nhé, qua ứng dụng hay tổng đài đều được, rồi ghé chi nhánh làm thẻ mới ạ."
+    ],
+    "keywords": ["mất thẻ", "thẻ mất", "rơi thẻ"]
+  },
+  "quen_mat_khau": {
+    "answers": [
+      "Dạ anh chị chọn quên mật khẩu trên ứng dụng, hệ thống gửi mã về số điện thoại đăng ký ạ.",
+      "Dạ trên màn hình đăng nhập có mục quên mật khẩu ạ. Anh chị bấm vào, mã sẽ gửi về số điện thoại đã đăng ký.",
+      "Dạ anh chị bấm quên mật khẩu trên ứng dụng, rồi nhập mã gửi về điện thoại là đặt lại được ạ."
+    ],
+    "keywords": ["quên mật khẩu", "mật khẩu", "đăng nhập"]
+  },
+  "mo_tai_khoan": {
+    "answers": [
+      "Dạ anh chị mở tài khoản trên ứng dụng bằng căn cước, hoặc ra chi nhánh, mất khoảng mười lăm phút ạ.",
+      "Dạ anh chị chỉ cần căn cước, mở trên ứng dụng hoặc tại chi nhánh đều được, khoảng mười lăm phút là xong ạ.",
+      "Dạ mở tài khoản mất chừng mười lăm phút ạ. Anh chị dùng căn cước, làm trên ứng dụng hoặc ra chi nhánh."
+    ],
+    "keywords": ["mở tài khoản", "mở thẻ", "làm thẻ"]
+  },
+  "phi_thuong_nien": {
+    "answers": [
+      "Dạ thẻ ghi nợ miễn phí thường niên năm đầu, từ năm sau là một trăm nghìn đồng ạ.",
+      "Dạ năm đầu anh chị không mất phí thường niên, từ năm thứ hai là một trăm nghìn đồng một năm ạ.",
+      "Dạ phí thường niên thẻ ghi nợ là một trăm nghìn đồng một năm, riêng năm đầu được miễn ạ."
+    ],
+    "keywords": ["thường niên", "phí thẻ", "phí năm"]
+  },
+  "rut_tien_atm": {
+    "answers": [
+      "Dạ rút tại máy của ngân hàng thì miễn phí, máy ngân hàng khác là ba nghìn đồng một lần ạ.",
+      "Dạ anh chị rút ở máy của bên em thì không mất phí, rút máy ngân hàng khác mất ba nghìn đồng một lần ạ.",
+      "Dạ mỗi lần rút ở máy ngân hàng khác là ba nghìn đồng, còn máy của bên em thì miễn phí ạ."
+    ],
+    "keywords": ["rút tiền", "atm", "cây rút"]
+  },
+  "thoi_gian_chuyen_tien": {
+    "answers": [
+      "Dạ chuyển trong ngân hàng là tức thì, chuyển ngoài thì trong vài phút, ngoài giờ làm việc có thể lâu hơn ạ.",
+      "Dạ trong ngân hàng thì tiền tới liền, sang ngân hàng khác mất vài phút, ngoài giờ làm việc có khi lâu hơn ạ.",
+      "Dạ thường thì vài phút là tới ạ. Chuyển trong ngân hàng thì tới ngay, ngoài giờ làm việc có thể chậm hơn chút."
+    ],
+    "keywords": ["bao lâu", "mấy phút", "chuyển lâu"]
+  },
+  "vay_can_gi": {
+    "answers": [
+      "Dạ vay cần căn cước, giấy tờ thu nhập, và sao kê ba tháng gần nhất ạ.",
+      "Dạ anh chị chuẩn bị căn cước, giấy tờ chứng minh thu nhập, với sao kê ba tháng gần nhất là được ạ.",
+      "Dạ hồ sơ vay gồm ba thứ ạ: căn cước, giấy tờ thu nhập, và sao kê ba tháng gần đây."
+    ],
+    "keywords": ["vay cần", "vay tiền", "thủ tục vay", "hồ sơ vay"]
+  },
+  "so_du_toi_thieu": {
+    "answers": [
+      "Dạ tài khoản thanh toán cần giữ tối thiểu năm mươi nghìn đồng ạ.",
+      "Dạ anh chị để lại ít nhất năm mươi nghìn đồng trong tài khoản thanh toán ạ.",
+      "Dạ số dư tối thiểu là năm mươi nghìn đồng ạ."
+    ],
+    "keywords": ["tối thiểu", "duy trì"]
+  },
+  "chi_nhanh_o_dau": {
+    "answers": [
+      "Dạ ngân hàng có chi nhánh ở các thành phố lớn, anh chị xem địa chỉ gần nhất trên ứng dụng ạ.",
+      "Dạ anh chị mở ứng dụng, mục chi nhánh sẽ chỉ chỗ gần nhất ạ. Bên em có ở các thành phố lớn.",
+      "Dạ bên em có chi nhánh ở các thành phố lớn ạ. Trên ứng dụng có bản đồ chỉ chỗ gần anh chị nhất."
+    ],
+    "keywords": ["chi nhánh", "ở đâu", "địa chỉ", "phòng giao dịch"]
+  },
+  "gioi_thieu": {
+    "answers": [
+      "Dạ đây là tổng đài ngân hàng An Tín, em là Duyên, em hỗ trợ anh chị ạ.",
+      "Dạ em là Duyên, tổng đài viên của ngân hàng An Tín ạ.",
+      "Dạ anh chị đang gọi tới ngân hàng An Tín, em tên Duyên, em nghe đây ạ."
+    ],
+    "keywords": ["ngân hàng gì", "ngân hàng nào", "tên ngân hàng", "ngân hàng của bạn", "ngân hàng của em", "bạn tên gì", "em tên gì", "bạn là ai", "em là ai"]
+  }
 }

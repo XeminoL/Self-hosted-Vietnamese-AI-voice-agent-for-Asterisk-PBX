@@ -1,5 +1,6 @@
 sherpa-onnx
-vieneu
+piper-tts
+soxr
 webrtcvad-wheels
 numpy
 pytest

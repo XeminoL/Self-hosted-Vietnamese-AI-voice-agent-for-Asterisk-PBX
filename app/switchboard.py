@@ -1,20 +1,22 @@
-import os
+import collections
 import socketserver
+import threading
 import time
 
 import webrtcvad
 
 from audiosocket import (AudioSocketConnection, ConnectionClosed, TYPE_AUDIO,
                          TYPE_DTMF)
-from conversation import Conversation
-from models import APP_DIR, SAMPLE_RATE, SpeechRecognizer, SpeechSynthesizer
-from voice_library import VoiceLibrary
+from conversation import Conversation, warm_up_llm
+from models import SAMPLE_RATE, SpeechRecognizer, SpeechSynthesizer
 
 HOST = "127.0.0.1"
 PORT = 9092
 
 MS_PER_FRAME = 20
 BYTES_PER_FRAME = SAMPLE_RATE * 2 * MS_PER_FRAME // 1000
+SILENCE_FRAME = bytes(BYTES_PER_FRAME)
+MAX_CATCH_UP_SECONDS = 0.5
 VAD_AGGRESSIVENESS = 3
 
 SPEECH_FRAMES_TO_START = 10
@@ -29,42 +31,67 @@ TRANSFER_NOTICE = "Dạ em chuyển anh chị cho nhân viên, anh chị giữ m
 
 recognizer = None
 synthesizer = None
-library = None
+
+
+class Speaker:
+    def __init__(self, connection):
+        self.connection = connection
+        self.frames = collections.deque()
+        self.stopped = threading.Event()
+        threading.Thread(target=self._run, daemon=True).start()
+
+    def queue(self, audio):
+        for start in range(0, len(audio), BYTES_PER_FRAME):
+            self.frames.append(audio[start:start + BYTES_PER_FRAME].ljust(BYTES_PER_FRAME, bytes(1)))
+
+    def is_speaking(self):
+        return bool(self.frames)
+
+    def _run(self):
+        deadline = time.monotonic()
+        while not self.stopped.is_set():
+            try:
+                frame = self.frames.popleft()
+            except IndexError:
+                frame = SILENCE_FRAME
+            try:
+                self.connection.send_audio(frame)
+            except OSError:
+                return
+            deadline += MS_PER_FRAME / 1000
+            remaining = deadline - time.monotonic()
+            if remaining > 0:
+                time.sleep(remaining)
+            elif remaining < -MAX_CATCH_UP_SECONDS:
+                deadline = time.monotonic()
 
 
 def load_models():
-    global recognizer, synthesizer, library
+    global recognizer, synthesizer
 
     print("Dang tai gipformer ...")
     started = time.time()
     recognizer = SpeechRecognizer()
     print(f"  xong sau {time.time() - started:.0f}s")
 
-    print("Dang tai VieNeu ...")
+    print("Dang tai giong Piper ...")
     started = time.time()
     synthesizer = SpeechSynthesizer()
+    synthesizer.speak(GREETING)
     print(f"  xong sau {time.time() - started:.0f}s")
-
-    library = VoiceLibrary(os.path.join(APP_DIR, "voice-library"), synthesizer.polished)
-    print(f"Thu vien giong: {library.size()} cau san")
-
-
-def audio_for(sentence):
-    path = library.lookup(sentence)
-    if path:
-        with open(path, "rb") as f:
-            return f.read(), True
-    library.queue_for_later(sentence)
-    return synthesizer.fast(sentence), False
 
 
 class VoiceChannel:
     def __init__(self, connection, call_id):
         self.connection = connection
         self.call_id = call_id
+        self.speaker = Speaker(connection)
         self.vad = webrtcvad.Vad(VAD_AGGRESSIVENESS)
         self.digits_so_far = ""
         self.dialed_number = ""
+
+    def hang_up(self):
+        self.speaker.stopped.set()
 
     def listen_until_caller_stops(self):
         frames = []
@@ -100,17 +127,16 @@ class VoiceChannel:
 
         return b"".join(frames) if speech_started else None
 
-    def play(self, audio_bytes):
-        deadline = time.monotonic()
-        for start in range(0, len(audio_bytes), BYTES_PER_FRAME):
-            frame = audio_bytes[start:start + BYTES_PER_FRAME]
-            self.connection.send_audio(frame.ljust(BYTES_PER_FRAME, bytes(1)))
-            deadline += MS_PER_FRAME / 1000
-            self._sleep_until(deadline)
+    def say(self, sentence):
+        started = time.monotonic()
+        audio = synthesizer.speak(sentence)
+        seconds = time.monotonic() - started
+        self.speaker.queue(audio)
+        while self.speaker.is_speaking():
             self.connection.read_frame()
-
         for _ in range(DEAD_FRAMES_AFTER_PLAYBACK):
             self.connection.read_frame()
+        return f"piper {seconds:.1f}s"
 
     def _collect_digit(self, payload):
         char = payload.decode("ascii", "ignore")
@@ -123,12 +149,6 @@ class VoiceChannel:
     def _is_speech(self, frame):
         return (len(frame) == BYTES_PER_FRAME
                 and self.vad.is_speech(frame, SAMPLE_RATE))
-
-    @staticmethod
-    def _sleep_until(deadline):
-        remaining = deadline - time.monotonic()
-        if remaining > 0:
-            time.sleep(remaining)
 
 
 def serve_call(channel, conversation):
@@ -150,14 +170,11 @@ def serve_call(channel, conversation):
 
         if result.transfer:
             print(f"[{channel.call_id}] CHUYEN MAY")
-            channel.play(audio_for(TRANSFER_NOTICE)[0])
+            channel.say(TRANSFER_NOTICE)
             return
 
-        started = time.time()
-        audio_bytes, from_library = audio_for(result.reply)
-        source = "thu vien" if from_library else f"piper {time.time() - started:.1f}s"
+        source = channel.say(result.reply)
         print(f"[{channel.call_id}] NOI ({source}): {result.reply}")
-        channel.play(audio_bytes)
 
 
 class ConnectionHandler(socketserver.StreamRequestHandler):
@@ -170,8 +187,11 @@ class ConnectionHandler(socketserver.StreamRequestHandler):
             print(f"\n[{call_id}] === cuoc goi moi ===")
 
             channel = VoiceChannel(connection, call_id)
-            channel.play(audio_for(GREETING)[0])
-            serve_call(channel, Conversation())
+            try:
+                channel.say(GREETING)
+                serve_call(channel, Conversation())
+            finally:
+                channel.hang_up()
             connection.send_hangup()
         except ConnectionClosed as reason:
             print(f"[{call_id}] ket thuc: {reason}")
@@ -179,7 +199,6 @@ class ConnectionHandler(socketserver.StreamRequestHandler):
             print(f"[{call_id}] mat ket noi: {error}")
 
         print(f"[{call_id}] === het ===")
-        library.synthesize_pending()
 
 
 class Server(socketserver.ThreadingTCPServer):
@@ -189,6 +208,7 @@ class Server(socketserver.ThreadingTCPServer):
 
 if __name__ == "__main__":
     load_models()
+    print(f"  (HIEU da nap san loi dan: {warm_up_llm()})")
     with Server((HOST, PORT), ConnectionHandler) as server:
         print(f"\nAudioSocket dang cho o {HOST}:{PORT} — goi so 600")
         server.serve_forever()
