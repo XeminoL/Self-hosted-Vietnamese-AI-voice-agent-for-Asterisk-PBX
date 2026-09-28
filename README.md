@@ -2,6 +2,8 @@ A phone switchboard that answers callers in Vietnamese, running on a laptop CPU.
 
 https://github.com/user-attachments/assets/5f15ed79-c462-433b-a1b7-56af63bedd98
 
+(A static or buzzing sound appeared during the recording, which is an issue that does not occur during normal use, sorry about that ;-;).
+
 ## Highlights
 
 - No GPU, no cloud: everything runs locally on an i7 laptop.
