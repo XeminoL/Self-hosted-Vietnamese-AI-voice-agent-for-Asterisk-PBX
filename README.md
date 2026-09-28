@@ -2,7 +2,7 @@ A phone switchboard that answers callers in Vietnamese.
 
 https://github.com/user-attachments/assets/5f15ed79-c462-433b-a1b7-56af63bedd98
 
-(A static or buzzing sound appeared during the recording, which is an issue that does not occur during normal use, sorry about that ;-;).
+(A static sound appeared during the recording, which is an issue that does not occur during normal use ;-;).
 
 ## Highlights
 
