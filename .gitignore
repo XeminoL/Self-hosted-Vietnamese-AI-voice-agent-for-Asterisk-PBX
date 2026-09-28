@@ -1,8 +1,8 @@
 __pycache__/
 *.pyc
-.venv/
+.venv*/
 .pytest_cache/
-app/calls/
+app/calls*/
 logs/
 tools/results-*.json
 *.wav
